@@ -1,0 +1,61 @@
+{
+  "name": "SaLaTi — مواقيت الصلاة والقبلة",
+  "short_name": "SaLaTi",
+  "description": "SaLaTi is a free, ad-free Islamic prayer app for Muslims worldwide. Get accurate prayer times (Fajr, Dhuhr, Asr, Maghrib, Isha), Qibla direction, Hijri calendar, and Moroccan Adhan — all in one elegant app. Available in Arabic and English.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./index.html?utm_source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0f0e",
+  "theme_color": "#0b0f0e",
+  "categories": ["lifestyle", "utilities", "religion"],
+  "iarc_rating_id": "",
+  "screenshots": [],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Prayer Times",
+      "short_name": "Prayers",
+      "description": "View today's prayer times",
+      "url": "./index.html#prayers",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Qibla Direction",
+      "short_name": "Qibla",
+      "description": "Find the direction of Makkah",
+      "url": "./index.html#qibla",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "id": "app.netlify.webnour2026.twa"
+}

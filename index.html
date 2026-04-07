@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0b0f0e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="صلاة">
+<meta name="application-name" content="صلاة">
+<meta name="description" content="تطبيق مواقيت الصلاة، القبلة والذكر">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>صلاة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0b0f0e; --surface:#111816; --surface2:#182020;
+  --border:rgba(255,255,255,.07);
+  --green:#4ade80; --green-dim:#22543d;
+  --gold:#d4a853; --gold-dim:rgba(212,168,83,.15);
+  --text:#f0ede6; --text-dim:#6b7a72; --text-mid:#a8b5ae;
+  --red:#f87171; --radius:18px;
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;background:var(--bg);}
+body{font-family:'IBM Plex Sans Arabic',sans-serif;color:var(--text);display:flex;flex-direction:column;user-select:none;}
+
+/* ── SWIPE ── */
+.screens{flex:1;display:flex;width:300%;height:100%;transition:transform .35s cubic-bezier(.4,0,.2,1);will-change:transform;}
+.screen{width:calc(100%/3);height:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.screen::-webkit-scrollbar{display:none;}
+
+/* ── DOTS ── */
+.dots{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 0 calc(10px + var(--safe-b));background:var(--bg);border-top:1px solid var(--border);flex-shrink:0;}
+.dot{width:6px;height:6px;border-radius:3px;background:var(--text-dim);transition:width .25s,background .25s;}
+.dot.active{width:22px;background:var(--green);}
+
+/* ── HOME ── */
+.home{min-height:100%;display:flex;flex-direction:column;padding:0 0 24px;background:var(--bg);}
+.status-bar{display:flex;align-items:center;justify-content:space-between;padding:52px 20px 0;}
+.city-btn{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-mid);background:none;border:none;cursor:pointer;font-family:inherit;padding:6px 10px;border-radius:20px;border:1px solid var(--border);}
+.dot-live{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite;flex-shrink:0;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.hijri-badge{font-family:'Amiri',serif;font-size:13px;color:var(--gold);background:var(--gold-dim);padding:4px 12px;border-radius:20px;cursor:pointer;}
+.lang-btn{
+  padding:4px 11px;border-radius:20px;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+  color:var(--text-mid);font-family:inherit;font-size:12px;font-weight:600;
+  cursor:pointer;transition:all .2s;letter-spacing:.05em;
+}
+.lang-btn.ar{color:var(--green);border-color:rgba(74,222,128,.3);background:rgba(74,222,128,.08);}
+
+.hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px 24px 0;text-align:center;}
+.next-label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px;}
+.next-name{font-family:'Amiri',serif;font-size:48px;line-height:1;color:var(--text);margin-bottom:4px;}
+.next-time-big{font-size:68px;font-weight:700;letter-spacing:-3px;color:var(--text);line-height:1;margin-bottom:10px;font-variant-numeric:tabular-nums;}
+
+.ring-wrap{position:relative;width:160px;height:160px;margin:0 auto 16px;}
+.ring-svg{position:absolute;inset:0;}
+.ring-track{fill:none;stroke:var(--surface2);stroke-width:8;}
+.ring-fill{fill:none;stroke:var(--green);stroke-width:8;stroke-linecap:round;transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset 1s linear;}
+.ring-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.countdown-val{font-size:26px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;}
+.countdown-lbl{font-size:11px;color:var(--text-dim);}
+
+.quick-row{display:flex;gap:10px;padding:0 20px;margin-bottom:16px;}
+.quick-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 6px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:background .15s,transform .1s;font-family:inherit;color:var(--text-mid);font-size:10px;}
+.quick-btn:active{background:var(--surface2);transform:scale(.97);}
+.quick-btn .qi{font-size:22px;}
+.quick-btn.adhan-on{border-color:rgba(74,222,128,.3);color:var(--green);}
+
+.method-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px 8px;}
+.method-lbl{font-size:12px;color:var(--text-dim);}
+.method-val{font-size:12px;color:var(--green);font-family:inherit;background:none;border:none;cursor:pointer;}
+
+.prayers-list{padding:0 16px;display:flex;flex-direction:column;gap:5px;}
+.p-row{display:flex;align-items:center;padding:12px 16px;border-radius:14px;transition:background .15s;}
+.p-row.current{background:var(--surface);border:1px solid rgba(74,222,128,.2);}
+.p-row.passed{opacity:.35;}
+.p-row .p-icon{font-size:17px;width:30px;flex-shrink:0;}
+.p-row .p-name-ar{font-family:'Amiri',serif;font-size:19px;flex:1;padding:0 8px;}
+.p-row .p-time{font-size:16px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums;}
+.p-row.current .p-name-ar,.p-row.current .p-time{color:var(--green);}
+.current-pip{width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:8px;flex-shrink:0;animation:blink 1.5s infinite;}
+
+/* ── WEEK BUTTON ── */
+.week-btn{
+  margin:14px 16px 0;
+  width:calc(100% - 32px);
+  padding:13px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);
+  color:var(--text-mid);font-family:inherit;font-size:13px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:background .15s;
+}
+.week-btn:active{background:var(--surface2);}
+
+/* ── QIBLA ── */
+.qibla-screen{min-height:100%;display:flex;flex-direction:column;align-items:center;padding:52px 20px 32px;background:var(--bg);gap:20px;}
+.qibla-title{font-family:'Amiri',serif;font-size:26px;color:var(--text);text-align:center;}
+.qibla-sub{font-size:12px;color:var(--text-dim);}
+.compass-wrap{position:relative;width:260px;height:260px;flex-shrink:0;}
+.c-bg{width:260px;height:260px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#1a2620,#0b0f0e);border:1.5px solid rgba(74,222,128,.15);box-shadow:0 0 60px rgba(74,222,128,.06),inset 0 0 40px rgba(0,0,0,.5);position:absolute;inset:0;}
+.c-svg{position:absolute;inset:0;width:260px;height:260px;}
+.c-cardinal{position:absolute;font-size:12px;font-weight:700;color:var(--text-dim);}
+.c-cardinal.cn{top:11px;left:50%;transform:translateX(-50%);color:var(--red);}
+.c-cardinal.cs{bottom:11px;left:50%;transform:translateX(-50%);}
+.c-cardinal.ce{top:50%;right:11px;transform:translateY(-50%);}
+.c-cardinal.cw{top:50%;left:11px;transform:translateY(-50%);}
+.c-needle-wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;transition:transform .4s ease;}
+.c-needle{position:relative;width:4px;height:240px;}
+.c-needle::before{content:'';position:absolute;bottom:50%;left:50%;transform:translateX(-50%);width:4px;height:84px;background:linear-gradient(to top,var(--red),#fca5a5);clip-path:polygon(50% 0%,100% 100%,0% 100%);border-radius:2px 2px 0 0;}
+.c-needle::after{content:'';position:absolute;top:50%;left:50%;transform:translateX(-50%);width:4px;height:84px;background:linear-gradient(to bottom,#4b5563,#1f2937);clip-path:polygon(0% 0%,100% 0%,50% 100%);}
+.c-kaaba-wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;transition:transform .4s ease;}
+.c-kaaba-line{position:relative;width:3px;height:240px;}
+.c-kaaba-line::before{content:'🕋';position:absolute;top:-4px;left:50%;transform:translateX(-50%);font-size:20px;filter:drop-shadow(0 0 10px rgba(212,168,83,.7));}
+.c-kaaba-line::after{content:'';position:absolute;top:20px;left:50%;transform:translateX(-50%);width:2px;height:100px;background:linear-gradient(to bottom,var(--gold),transparent);}
+.c-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:12px;height:12px;border-radius:50%;background:var(--green);z-index:10;box-shadow:0 0 12px rgba(74,222,128,.6);}
+.q-angle{font-size:44px;font-weight:700;color:var(--text);letter-spacing:-2px;text-align:center;}
+.q-lbl{font-size:12px;color:var(--text-dim);text-align:center;margin-top:4px;}
+.q-status{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:6px 16px;border-radius:20px;font-size:12px;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);color:var(--green);}
+.qibla-info{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.qi-row{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid var(--border);font-size:13px;}
+.qi-row:last-child{border-bottom:none;}
+.qi-row .k{color:var(--text-dim);}
+.qi-row .v{color:var(--text);font-weight:500;}
+
+/* ── CAL SCREEN ── */
+.cal-screen{min-height:100%;padding:52px 16px 32px;background:var(--bg);display:flex;flex-direction:column;gap:16px;}
+.hijri-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;text-align:center;}
+.hijri-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.adj-btn{width:40px;height:40px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;font-family:inherit;}
+.adj-btn:active{background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);}
+.hijri-center{flex:1;}
+.hijri-month{font-family:'Amiri',serif;font-size:22px;color:var(--gold);}
+.hijri-day-big{font-size:64px;font-weight:700;color:var(--text);line-height:1;letter-spacing:-3px;}
+.hijri-year{font-size:15px;color:var(--text-dim);}
+.hijri-greg{font-size:12px;color:var(--text-dim);margin-top:6px;}
+.adj-info{font-size:11px;color:rgba(74,222,128,.7);margin-top:6px;}
+
+.ramadan-bar{background:linear-gradient(135deg,#1a2420,#0b1a14);border:1px solid rgba(212,168,83,.3);border-radius:var(--radius);padding:14px 18px;display:flex;align-items:center;gap:12px;}
+.ramadan-icon{font-size:26px;}
+.ramadan-text .t1{font-size:14px;color:var(--gold);}
+.ramadan-text .t2{font-size:12px;color:var(--text-dim);margin-top:2px;}
+
+.sec-title{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+.dhikr-counter-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;text-align:center;}
+.dhikr-ar-text{font-family:'Amiri Quran',serif;font-size:26px;color:var(--text);line-height:1.6;margin-bottom:4px;}
+.dhikr-fr-text{font-size:12px;color:var(--text-dim);margin-bottom:16px;}
+.big-counter-btn{width:100px;height:100px;border-radius:50%;background:var(--surface2);border:2px solid rgba(74,222,128,.3);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 14px;cursor:pointer;transition:transform .1s,border-color .15s;box-shadow:0 0 30px rgba(74,222,128,.08);}
+.big-counter-btn:active{transform:scale(.93);}
+.big-counter-btn.done{border-color:var(--gold);box-shadow:0 0 30px rgba(212,168,83,.2);}
+.counter-num{font-size:38px;font-weight:700;color:var(--text);line-height:1;}
+.counter-of{font-size:11px;color:var(--text-dim);}
+.dhikr-controls{display:flex;gap:10px;justify-content:center;}
+.dc-btn{padding:7px 18px;border-radius:20px;background:var(--surface2);border:1px solid var(--border);color:var(--text-mid);font-family:inherit;font-size:12px;cursor:pointer;transition:background .15s;}
+.dhikr-nav{display:flex;gap:8px;margin-top:12px;overflow-x:auto;scrollbar-width:none;}
+.dhikr-nav::-webkit-scrollbar{display:none;}
+.dn-btn{flex-shrink:0;padding:6px 13px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--text-dim);font-family:inherit;font-size:12px;cursor:pointer;transition:all .15s;}
+.dn-btn.active{background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:var(--green);}
+
+/* ── MODALS ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .25s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal-sheet{width:100%;background:var(--surface);border-radius:24px 24px 0 0;padding:16px 0 calc(32px + var(--safe-b));transform:translateY(30px);transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:88vh;overflow-y:auto;}
+.modal-overlay.open .modal-sheet{transform:translateY(0);}
+.modal-handle{width:36px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 18px;}
+.modal-title{font-family:'Amiri',serif;font-size:22px;text-align:center;color:var(--gold);margin-bottom:14px;padding:0 20px;}
+.modal-option{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;cursor:pointer;transition:background .15s;}
+.modal-option:hover{background:rgba(255,255,255,.03);}
+.modal-option .mo-name{font-size:15px;color:var(--text);}
+.modal-option .mo-desc{font-size:12px;color:var(--text-dim);margin-top:2px;}
+.modal-option .mo-check{color:var(--green);font-size:18px;}
+
+/* City search modal */
+.city-search-wrap{padding:0 16px 12px;}
+.city-input{
+  width:100%;padding:12px 16px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:12px;color:var(--text);font-family:inherit;font-size:15px;
+  outline:none;transition:border-color .2s;
+  text-align:right;
+}
+.city-input:focus{border-color:rgba(74,222,128,.4);}
+.city-input::placeholder{color:var(--text-dim);}
+.city-results{max-height:300px;overflow-y:auto;}
+.city-result-item{padding:14px 24px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s;}
+.city-result-item:active{background:var(--surface2);}
+.city-result-item .cr-name{font-size:15px;color:var(--text);}
+.city-result-item .cr-country{font-size:12px;color:var(--text-dim);margin-top:2px;}
+
+/* Week modal */
+.week-sheet{padding:0 16px;}
+.week-day-card{background:var(--surface2);border-radius:14px;padding:14px 16px;margin-bottom:10px;border:1px solid var(--border);}
+.week-day-card.today{border-color:rgba(74,222,128,.3);}
+.week-day-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.wdh-day{font-family:'Amiri',serif;font-size:17px;color:var(--text);}
+.wdh-date{font-size:11px;color:var(--text-dim);}
+.week-times{display:flex;gap:6px;flex-wrap:wrap;}
+.wt-pill{
+  display:flex;flex-direction:column;align-items:center;
+  background:var(--surface);border-radius:10px;padding:6px 10px;flex:1;min-width:52px;
+}
+.wt-pill .wtp-name{font-size:9px;color:var(--text-dim);}
+.wt-pill .wtp-time{font-size:13px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums;}
+.week-loading{text-align:center;padding:30px;color:var(--text-dim);font-size:14px;}
+
+/* Adhan pill */
+.adhan-pill{position:fixed;bottom:calc(58px + var(--safe-b));right:14px;background:var(--surface);border:1px solid var(--border);border-radius:30px;padding:7px 14px;display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-mid);cursor:pointer;z-index:50;box-shadow:0 4px 20px rgba(0,0,0,.4);transition:border-color .2s;}
+.adhan-pill.on{border-color:rgba(74,222,128,.4);color:var(--green);}
+
+/* Toast */
+.toast{position:fixed;top:56px;left:50%;transform:translateX(-50%) translateY(-10px);background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:8px 20px;font-size:13px;color:var(--text);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:300;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* Loading */
+.loading-overlay{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:500;transition:opacity .4s;}
+.loading-overlay.hide{opacity:0;pointer-events:none;}
+.l-spinner{width:34px;height:34px;border:2.5px solid rgba(74,222,128,.15);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.l-txt{font-size:14px;color:var(--text-dim);}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loading">
+  <div style="font-size:38px">🕌</div>
+  <div class="l-spinner"></div>
+  <div class="l-txt" id="loading-txt">جارٍ تحديد موقعك…</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="adhan-pill on" id="adhan-pill" onclick="toggleAdhan()">
+  <span id="adhan-icon">🔔</span>
+  <span id="adhan-lbl">أذان مفعّل</span>
+</div>
+
+<!-- ═══ ADHAN SELECTOR MODAL ═══ -->
+<div class="modal-overlay" id="adhan-modal" onclick="if(event.target===this)closeAll()">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🔔 اختر صوت الأذان</div>
+    <div id="adhan-options-list"></div>
+    <div style="padding:16px 24px 0;">
+      <button onclick="testAdhan()" style="width:100%;padding:13px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);border-radius:14px;color:var(--green);font-family:inherit;font-size:14px;cursor:pointer;">
+        ▶ تجربة الصوت المختار
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ METHOD MODAL ═══ -->
+<div class="modal-overlay" id="method-modal" onclick="if(event.target===this)closeAll()">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">طريقة الحساب</div>
+    <div id="method-list"></div>
+  </div>
+</div>
+
+<!-- ═══ CITY MODAL ═══ -->
+<div class="modal-overlay" id="city-modal" onclick="if(event.target===this)closeAll()">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🔍 اختر المدينة</div>
+    <div class="city-search-wrap">
+      <input class="city-input" id="city-input" type="text" placeholder="ابحث عن مدينة… ex: Casablanca" oninput="searchCity(this.value)" autocomplete="off">
+    </div>
+    <div class="city-results" id="city-results">
+      <div style="padding:14px 24px;">
+        <div class="modal-option" onclick="useGPS()">
+          <div><div class="mo-name">📍 استخدام موقعي الحالي (GPS)</div><div class="mo-desc">تحديد تلقائي</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ WEEK MODAL ═══ -->
+<div class="modal-overlay" id="week-modal" onclick="if(event.target===this)closeAll()">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📅 مواقيت الأسبوع القادم</div>
+    <div class="week-sheet" id="week-content">
+      <div class="week-loading">⏳ جارٍ التحميل…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SCREENS ═══ -->
+<div class="screens" id="screens">
+
+  <!-- SCREEN 0: HOME -->
+  <div class="screen" id="s0">
+    <div class="home">
+      <div class="status-bar">
+        <button class="city-btn" onclick="openCityModal()">
+          <div class="dot-live"></div>
+          <span id="city-lbl">…</span>
+          <span style="color:var(--text-dim);font-size:10px">▾</span>
+        </button>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button class="lang-btn" id="lang-btn" onclick="toggleLang()">EN</button>
+          <div class="hijri-badge" id="hijri-lbl" onclick="swipeTo(2)">…</div>
+        </div>
+      </div>
+
+      <div class="hero">
+        <div class="next-label" id="next-label-el">الصلاة القادمة</div>
+        <div class="next-name" id="next-name">—</div>
+        <div class="next-time-big" id="next-time">—:——</div>
+        <div class="ring-wrap">
+          <svg class="ring-svg" viewBox="0 0 160 160">
+            <circle class="ring-track" cx="80" cy="80" r="72"/>
+            <circle class="ring-fill" id="ring-fill" cx="80" cy="80" r="72" stroke-dasharray="452" stroke-dashoffset="452"/>
+          </svg>
+          <div class="ring-inner">
+            <div class="countdown-val" id="countdown-val">—:——</div>
+            <div class="countdown-lbl" id="countdown-lbl-el">متبقي</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="quick-row">
+        <button class="quick-btn" onclick="swipeTo(1)"><span class="qi">🧭</span><span id="qibla-quick-el">القبلة</span></button>
+        <button class="quick-btn adhan-on" id="adhan-quick" onclick="toggleAdhan()" oncontextmenu="openAdhanModal();return false;"><span class="qi" id="aq-icon">🔔</span><span id="aq-lbl">أذان</span></button>
+        <button class="quick-btn" onclick="openAdhanModal()"><span class="qi">🎵</span><span id="sound-btn-el">صوت الأذان</span></button>
+        <button class="quick-btn" onclick="openMethodModal()"><span class="qi">⚙️</span><span id="method-btn-el">الطريقة</span></button>
+      </div>
+
+      <div class="method-bar">
+        <span class="method-lbl" id="method-lbl-el">مواقيت الصلاة</span>
+        <button class="method-val" id="method-display" onclick="openMethodModal()">المغرب</button>
+      </div>
+      <div class="prayers-list" id="prayers-list"></div>
+
+      <button class="week-btn" onclick="openWeekModal()">
+        <span id="week-btn-el">📅 مواقيت الأسبوع القادم</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- SCREEN 1: QIBLA -->
+  <div class="screen" id="s1">
+    <div class="qibla-screen">
+      <div><div class="qibla-title" id="qibla-title-el">🕋 القبلة</div><div class="qibla-sub" id="qibla-sub-el" style="text-align:center">اتجاه الكعبة المشرفة</div></div>
+      <div class="compass-wrap">
+        <div class="c-bg"></div>
+        <svg class="c-svg" viewBox="0 0 260 260"><g id="ticks"></g></svg>
+        <div class="c-cardinal cn">N</div><div class="c-cardinal cs">S</div>
+        <div class="c-cardinal ce">E</div><div class="c-cardinal cw">W</div>
+        <div class="c-needle-wrap" id="c-needle-wrap"><div class="c-needle"></div></div>
+        <div class="c-kaaba-wrap" id="c-kaaba-wrap"><div class="c-kaaba-line"></div></div>
+        <div class="c-center"></div>
+      </div>
+      <div><div class="q-angle" id="q-angle">—°</div><div class="q-lbl" id="q-lbl-el">زاوية القبلة من الشمال</div><div class="q-status" id="q-status">⏳ جارٍ التحديد…</div></div>
+      <div class="qibla-info">
+        <div class="qi-row"><span class="k" id="qi-loc-k">📍 موقعك</span><span class="v" id="qi-loc">—</span></div>
+        <div class="qi-row"><span class="k" id="qi-bear-k">📐 الاتجاه</span><span class="v" id="qi-bear">—</span></div>
+        <div class="qi-row"><span class="k" id="qi-dist-k">🕌 المسافة للمكة</span><span class="v" id="qi-dist">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: CALENDAR + DHIKR -->
+  <div class="screen" id="s2">
+    <div class="cal-screen">
+
+      <!-- Hijri card with +/- -->
+      <div class="hijri-card">
+        <div class="hijri-nav">
+          <button class="adj-btn" onclick="adjustHijri(-1)">−</button>
+          <div class="hijri-center">
+            <div class="hijri-month" id="h-month">…</div>
+            <div class="hijri-day-big" id="h-day">—</div>
+            <div class="hijri-year" id="h-year">— هـ</div>
+          </div>
+          <button class="adj-btn" onclick="adjustHijri(+1)">+</button>
+        </div>
+        <div class="hijri-greg" id="h-greg">…</div>
+        <div class="adj-info" id="adj-info" style="display:none"></div>
+      </div>
+
+      <div class="ramadan-bar" id="ramadan-bar" style="display:none">
+        <div class="ramadan-icon">🌙</div>
+        <div class="ramadan-text">
+          <div class="t1">رمضان المبارك</div>
+          <div class="t2" id="ramadan-info">—</div>
+        </div>
+      </div>
+
+      <div class="dhikr-section">
+        <div class="sec-title" id="dhikr-title-el">التسبيح والذكر</div>
+        <div class="dhikr-nav" id="dhikr-nav">
+          <button class="dn-btn active" onclick="setDhikr(0,this)">بعد الصلاة</button>
+          <button class="dn-btn" onclick="setDhikr(1,this)">صباح</button>
+          <button class="dn-btn" onclick="setDhikr(2,this)">مساء</button>
+          <button class="dn-btn" onclick="setDhikr(3,this)">عام</button>
+        </div>
+        <div class="dhikr-counter-card">
+          <div class="dhikr-ar-text" id="d-ar">سُبْحَانَ اللَّهِ</div>
+          <div class="dhikr-fr-text" id="d-fr">Gloire à Allah</div>
+          <div class="big-counter-btn" id="cnt-btn" onclick="countUp()">
+            <div class="counter-num" id="cnt-num">0</div>
+            <div class="counter-of" id="cnt-of">من 33</div>
+          </div>
+          <div class="dhikr-controls">
+            <button class="dc-btn" id="reset-btn-el" onclick="resetCount()">↺ إعادة</button>
+            <button class="dc-btn" id="next-zikr-btn-el" onclick="nextZikr()">التالي ›</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="dots">
+  <div class="dot active" id="dot0"></div>
+  <div class="dot" id="dot1"></div>
+  <div class="dot" id="dot2"></div>
+</div>
+
+<script>
+'use strict';
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+const S = {
+  lat:33.5731, lon:-7.5898, city:'الدار البيضاء',
+  times:{}, method:21, adhan:true,
+  page:0, qiblaAngle:0, compassHeading:0,
+  dhikrCat:0, dhikrIdx:0, count:0, timer:null,
+  hijriOffset:0,         // +/- days adjustment
+  hijriBase:null,        // base hijri data from API
+  citySearchTimer:null,
+};
+
+const METHODS=[
+  {id:21,name:'المغرب (UIFMR)',desc:'وزارة الأوقاف المغربية'},
+  {id:3,name:'رابطة العالم الإسلامي',desc:'Muslim World League'},
+  {id:5,name:'أم القرى',desc:'Umm Al-Qura, Saudi Arabia'},
+  {id:2,name:'أمريكا الشمالية (ISNA)',desc:'Islamic Society of North America'},
+  {id:4,name:'مصر',desc:'General Authority of Survey'},
+];
+const PRAYERS=[
+  {k:'Fajr',ar:'الفجر',icon:'🌙'},
+  {k:'Sunrise',ar:'الشروق',icon:'🌅'},
+  {k:'Dhuhr',ar:'الظهر',icon:'☀️'},
+  {k:'Asr',ar:'العصر',icon:'🌤'},
+  {k:'Maghrib',ar:'المغرب',icon:'🌆'},
+  {k:'Isha',ar:'العشاء',icon:'🌌'},
+];
+const DHIKR=[
+  [{ar:'سُبْحَانَ اللَّهِ',fr:'Gloire à Allah',n:33},{ar:'الْحَمْدُ لِلَّهِ',fr:'Louange à Allah',n:33},{ar:'اللَّهُ أَكْبَرُ',fr:'Allah est le Plus Grand',n:33},{ar:'لَا إِلَٰهَ إِلَّا اللَّهُ',fr:'Pas de divinité sauf Allah',n:100}],
+  [{ar:'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ',fr:'Gloire à Allah et louange',n:100},{ar:'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ',fr:'Bénis Muhammad ﷺ',n:100},{ar:'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ',fr:'Bismillah',n:21}],
+  [{ar:'سُبْحَانَ اللَّهِ الْعَظِيمِ',fr:'Gloire au Seigneur Immense',n:100},{ar:'رَبِّ اغْفِرْ لِي',fr:'Mon Seigneur pardonne-moi',n:100},{ar:'أَسْتَغْفِرُ اللَّهَ',fr:'Je demande pardon à Allah',n:100}],
+  [{ar:'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ',fr:'Pas de force sans Allah',n:33},{ar:'حَسْبِيَ اللَّهُ',fr:'Allah me suffit',n:7},{ar:'لَا إِلَٰهَ إِلَّا اللَّهُ',fr:'Tahlil',n:100}],
+];
+
+// ══════════════════════════════════════════
+// i18n — AR / EN
+// ══════════════════════════════════════════
+const I18N = {
+  ar: {
+    next_label:    'الصلاة القادمة',
+    countdown_lbl: 'متبقي',
+    qibla_title:   'القبلة',
+    qibla_sub:     'اتجاه الكعبة المشرفة',
+    qibla_lbl:     'زاوية القبلة من الشمال',
+    qi_loc:        '📍 موقعك',
+    qi_bear:       '📐 الاتجاه',
+    qi_dist:       '🕌 المسافة للمكة',
+    dhikr_title:   'التسبيح والذكر',
+    next_label2:   'الصلاة القادمة',
+    method_lbl:    'مواقيت الصلاة',
+    week_btn:      '📅 مواقيت الأسبوع القادم',
+    week_title:    '📅 مواقيت الأسبوع القادم',
+    city_title:    '🔍 اختر المدينة',
+    gps_name:      '📍 استخدام موقعي الحالي (GPS)',
+    gps_desc:      'تحديد تلقائي',
+    adhan_title:   '🔔 اختر صوت الأذان',
+    adhan_test:    '▶ تجربة الصوت المختار',
+    method_title:  'طريقة الحساب',
+    loading:       'جارٍ تحديد موقعك…',
+    adhan_on:      'أذان مفعّل',
+    adhan_off:     'صامت',
+    adhan_q:       'أذان',
+    qibla_btn:     'القبلة',
+    method_btn:    'الطريقة',
+    sound_btn:     'صوت الأذان',
+    reset_btn:     '↺ إعادة',
+    next_btn:      'التالي ›',
+    cats:          ['بعد الصلاة','صباح','مساء','عام'],
+    prayers: [
+      {k:'Fajr',   name:'الفجر',  icon:'🌙'},
+      {k:'Sunrise',name:'الشروق', icon:'🌅'},
+      {k:'Dhuhr',  name:'الظهر',  icon:'☀️'},
+      {k:'Asr',    name:'العصر',  icon:'🌤'},
+      {k:'Maghrib',name:'المغرب', icon:'🌆'},
+      {k:'Isha',   name:'العشاء', icon:'🌌'},
+    ],
+    ramadan_title: 'رمضان المبارك',
+    hijri_suffix:  'هـ',
+    km:            'كم',
+    from_north:    '° من الشمال',
+    compass_live:  '🧭 البوصلة نشطة',
+    facing_qibla:  '✅ أنت تواجه القبلة',
+    rotate:        '↻ أدر ',
+    manual_qibla:  ' من الشمال (يدوي)',
+    week_loading:  '⏳ جارٍ التحميل…',
+    methods: [
+      {id:21,name:'المغرب (UIFMR)',       desc:'وزارة الأوقاف المغربية'},
+      {id:3, name:'رابطة العالم الإسلامي',desc:'Muslim World League'},
+      {id:5, name:'أم القرى',             desc:'Umm Al-Qura, Saudi Arabia'},
+      {id:2, name:'أمريكا الشمالية (ISNA)',desc:'Islamic Society of North America'},
+      {id:4, name:'مصر',                  desc:'General Authority of Survey'},
+    ],
+    voices: [
+      {id:'moroccan', name:'أذان مغربي 1', emoji:'🇲🇦', desc:'الطابع المغربي الأصيل'},
+      {id:'moroccan2',name:'أذان مغربي 2', emoji:'🕌',  desc:'رواية مغربية مختارة'},
+    ],
+    dhikr_cats: [
+      [{ar:'سُبْحَانَ اللَّهِ',          tr:'Subhan Allah',           n:33},
+       {ar:'الْحَمْدُ لِلَّهِ',          tr:'Alhamdulillah',          n:33},
+       {ar:'اللَّهُ أَكْبَرُ',           tr:'Allahu Akbar',           n:33},
+       {ar:'لَا إِلَٰهَ إِلَّا اللَّهُ',tr:'La ilaha ill Allah',     n:100}],
+      [{ar:'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ',  tr:'Subhan Allah wa bihamdih',n:100},
+       {ar:'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ',tr:'Allahumma salli ala Muhammad ﷺ',n:100},
+       {ar:'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ',tr:'Bismillah',  n:21}],
+      [{ar:'سُبْحَانَ اللَّهِ الْعَظِيمِ',    tr:'Subhan Allah Al-Azim',n:100},
+       {ar:'رَبِّ اغْفِرْ لِي',               tr:'Rabbi ighfir li',     n:100},
+       {ar:'أَسْتَغْفِرُ اللَّهَ',            tr:'Astaghfirullah',      n:100}],
+      [{ar:'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ',tr:'La hawla wala quwwata illa billah',n:33},
+       {ar:'حَسْبِيَ اللَّهُ',               tr:'Hasbiyallah',         n:7},
+       {ar:'لَا إِلَٰهَ إِلَّا اللَّهُ',    tr:'La ilaha ill Allah',  n:100}],
+    ],
+  },
+  en: {
+    next_label:    'Next Prayer',
+    countdown_lbl: 'remaining',
+    qibla_title:   'Qibla',
+    qibla_sub:     'Direction of the Holy Kaaba',
+    qibla_lbl:     'Qibla angle from North',
+    qi_loc:        '📍 Your location',
+    qi_bear:       '📐 Direction',
+    qi_dist:       '🕌 Distance to Makkah',
+    dhikr_title:   'Dhikr & Tasbih',
+    next_label2:   'Next Prayer',
+    method_lbl:    'Prayer Times',
+    week_btn:      '📅 Next Week Schedule',
+    week_title:    '📅 Next Week Prayer Times',
+    city_title:    '🔍 Choose City',
+    gps_name:      '📍 Use my current location (GPS)',
+    gps_desc:      'Auto detect',
+    adhan_title:   '🔔 Choose Adhan Sound',
+    adhan_test:    '▶ Test Selected Sound',
+    method_title:  'Calculation Method',
+    loading:       'Detecting your location…',
+    adhan_on:      'Adhan On',
+    adhan_off:     'Silent',
+    adhan_q:       'Adhan',
+    qibla_btn:     'Qibla',
+    method_btn:    'Method',
+    sound_btn:     'Adhan Sound',
+    reset_btn:     '↺ Reset',
+    next_btn:      'Next ›',
+    cats:          ['After Prayer','Morning','Evening','General'],
+    prayers: [
+      {k:'Fajr',   name:'Fajr',    icon:'🌙'},
+      {k:'Sunrise',name:'Sunrise', icon:'🌅'},
+      {k:'Dhuhr',  name:'Dhuhr',   icon:'☀️'},
+      {k:'Asr',    name:'Asr',     icon:'🌤'},
+      {k:'Maghrib',name:'Maghrib', icon:'🌆'},
+      {k:'Isha',   name:'Isha',    icon:'🌌'},
+    ],
+    ramadan_title: 'Blessed Ramadan',
+    hijri_suffix:  'H',
+    km:            'km',
+    from_north:    '° from North',
+    compass_live:  '🧭 Compass active',
+    facing_qibla:  '✅ You are facing the Qibla',
+    rotate:        '↻ Rotate ',
+    manual_qibla:  ' from North (manual)',
+    week_loading:  '⏳ Loading…',
+    methods: [
+      {id:21,name:'Morocco (UIFMR)',         desc:'Ministry of Islamic Affairs Morocco'},
+      {id:3, name:'Muslim World League',     desc:'Makkah'},
+      {id:5, name:'Umm Al-Qura',            desc:'Umm Al-Qura, Saudi Arabia'},
+      {id:2, name:'North America (ISNA)',    desc:'Islamic Society of North America'},
+      {id:4, name:'Egypt',                  desc:'General Authority of Survey'},
+    ],
+    voices: [
+      {id:'moroccan', name:'Moroccan Adhan 1', emoji:'🇲🇦', desc:'Traditional Moroccan style'},
+      {id:'moroccan2',name:'Moroccan Adhan 2', emoji:'🕌',  desc:'Selected Moroccan recitation'},
+    ],
+    dhikr_cats: [
+      [{ar:'سُبْحَانَ اللَّهِ',          tr:'Glory be to Allah',      n:33},
+       {ar:'الْحَمْدُ لِلَّهِ',          tr:'All praise to Allah',    n:33},
+       {ar:'اللَّهُ أَكْبَرُ',           tr:'Allah is the Greatest',  n:33},
+       {ar:'لَا إِلَٰهَ إِلَّا اللَّهُ',tr:'None worthy of worship but Allah',n:100}],
+      [{ar:'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ',  tr:'Glory and praise to Allah',n:100},
+       {ar:'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ',tr:'Send blessings upon Muhammad ﷺ',n:100},
+       {ar:'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ',tr:'In the name of Allah',n:21}],
+      [{ar:'سُبْحَانَ اللَّهِ الْعَظِيمِ',    tr:'Glory to the Magnificent Lord',n:100},
+       {ar:'رَبِّ اغْفِرْ لِي',               tr:'My Lord, forgive me',  n:100},
+       {ar:'أَسْتَغْفِرُ اللَّهَ',            tr:'I seek forgiveness',   n:100}],
+      [{ar:'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ',tr:'No power except with Allah',n:33},
+       {ar:'حَسْبِيَ اللَّهُ',               tr:'Allah is sufficient for me',n:7},
+       {ar:'لَا إِلَٰهَ إِلَّا اللَّهُ',    tr:'None worthy of worship but Allah',n:100}],
+    ],
+  },
+};
+
+S.lang = 'ar';
+
+function T(){ return I18N[S.lang]; }
+
+function toggleLang(){
+  S.lang = S.lang === 'ar' ? 'en' : 'ar';
+  try{ localStorage.setItem('lang', S.lang); }catch(e){}
+  applyLang();
+}
+
+function applyLang(){
+  const t = T();
+  const isAr = S.lang === 'ar';
+  const btn = document.getElementById('lang-btn');
+  btn.textContent = isAr ? 'EN' : 'عر';
+  btn.classList.toggle('ar', !isAr);
+
+  // Direction
+  document.documentElement.lang = S.lang;
+  document.documentElement.dir  = isAr ? 'rtl' : 'ltr';
+
+  // Static UI labels
+  document.getElementById('next-label-el').textContent  = t.next_label;
+  document.getElementById('countdown-lbl-el').textContent = t.countdown_lbl;
+  document.getElementById('method-lbl-el').textContent  = t.method_lbl;
+  document.getElementById('week-btn-el').textContent    = t.week_btn;
+  document.getElementById('aq-lbl').textContent         = S.adhan ? t.adhan_q : t.adhan_off;
+  document.getElementById('adhan-lbl').textContent      = S.adhan ? t.adhan_on : t.adhan_off;
+  document.getElementById('qibla-title-el').textContent = t.qibla_title;
+  document.getElementById('qibla-sub-el').textContent   = t.qibla_sub;
+  document.getElementById('q-lbl-el').textContent       = t.qibla_lbl;
+  document.getElementById('qi-loc-k').textContent       = t.qi_loc;
+  document.getElementById('qi-bear-k').textContent      = t.qi_bear;
+  document.getElementById('qi-dist-k').textContent      = t.qi_dist;
+  document.getElementById('dhikr-title-el').textContent = t.dhikr_title;
+  document.getElementById('sound-btn-el').textContent   = t.sound_btn;
+  document.getElementById('qibla-quick-el').textContent = t.qibla_btn;
+  document.getElementById('method-btn-el').textContent  = t.method_btn;
+  document.getElementById('reset-btn-el').textContent   = t.reset_btn;
+  document.getElementById('next-zikr-btn-el').textContent = t.next_btn;
+
+  // Dhikr category tabs
+  const cats = document.querySelectorAll('.dn-btn');
+  t.cats.forEach((c,i)=>{ if(cats[i]) cats[i].textContent = c; });
+
+  // Re-render dynamic content
+  renderPrayers();
+  updateDhikrUI();
+}
+const screensEl=document.getElementById('screens');
+let tx=0,ty=0,dragging=false;
+screensEl.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY;dragging=true;},{passive:true});
+screensEl.addEventListener('touchend',e=>{
+  if(!dragging)return;
+  const dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty;
+  if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>40){
+    if(dx<0&&S.page<2)swipeTo(S.page+1);
+    if(dx>0&&S.page>0)swipeTo(S.page-1);
+  }
+  dragging=false;
+});
+function swipeTo(idx){
+  S.page=idx;
+  screensEl.style.transform=`translateX(${idx*33.333}%)`;
+  [0,1,2].forEach(i=>document.getElementById('dot'+i).classList.toggle('active',i===idx));
+  if(idx===1)initQibla();
+}
+
+// ══════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════
+const toMin=t=>{const[h,m]=t.split(':').map(Number);return h*60+m;};
+const fmt=t=>t.slice(0,5);
+const nowMin=()=>{const n=new Date();return n.getHours()*60+n.getMinutes();};
+function toast(msg,dur=2200){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),dur);
+}
+function closeAll(){
+  document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('open'));
+}
+
+// ══════════════════════════════════════════
+// LOCATION
+// ══════════════════════════════════════════
+function initLocation(){
+  document.getElementById('loading').classList.remove('hide');
+  document.getElementById('loading-txt').textContent='جارٍ تحديد موقعك…';
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(pos=>{
+      S.lat=pos.coords.latitude; S.lon=pos.coords.longitude;
+      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${S.lat}&lon=${S.lon}&format=json`)
+        .then(r=>r.json()).then(d=>{
+          S.city=d.address.city||d.address.town||d.address.village||d.address.county||'موقعك';
+          loadPrayers();
+        }).catch(()=>{S.city='موقعك';loadPrayers();});
+    },()=>{S.lat=33.5731;S.lon=-7.5898;S.city='الدار البيضاء';loadPrayers();},{timeout:8000});
+  } else {
+    S.lat=33.5731;S.lon=-7.5898;S.city='الدار البيضاء';loadPrayers();
+  }
+}
+
+function useGPS(){
+  closeAll();
+  initLocation();
+}
+
+// ══════════════════════════════════════════
+// CITY SEARCH
+// ══════════════════════════════════════════
+function openCityModal(){
+  document.getElementById('city-modal').classList.add('open');
+  document.getElementById('city-input').value='';
+  document.getElementById('city-results').innerHTML=`
+    <div style="padding:14px 24px;">
+      <div class="modal-option" onclick="useGPS()">
+        <div><div class="mo-name">📍 استخدام موقعي الحالي (GPS)</div><div class="mo-desc">تحديد تلقائي</div></div>
+      </div>
+    </div>`;
+  setTimeout(()=>document.getElementById('city-input').focus(),300);
+}
+
+function searchCity(q){
+  clearTimeout(S.citySearchTimer);
+  if(q.length<2){return;}
+  S.citySearchTimer=setTimeout(async()=>{
+    try{
+      const res=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=8&featuretype=city`);
+      const data=await res.json();
+      const el=document.getElementById('city-results');
+      if(!data.length){el.innerHTML='<div style="padding:20px;text-align:center;color:var(--text-dim);font-size:13px">لا توجد نتائج</div>';return;}
+      el.innerHTML=data.map(d=>`
+        <div class="city-result-item" onclick="selectCity(${d.lat},${d.lon},'${(d.display_name.split(',')[0]).replace(/'/g,"\\'")}')">
+          <div class="cr-name">${d.display_name.split(',').slice(0,2).join('،')}</div>
+          <div class="cr-country">${d.display_name.split(',').pop().trim()}</div>
+        </div>`).join('');
+    }catch(e){document.getElementById('city-results').innerHTML='<div style="padding:20px;text-align:center;color:var(--text-dim);font-size:13px">❌ فشل البحث</div>';}
+  },500);
+}
+
+function selectCity(lat,lon,name){
+  S.lat=parseFloat(lat); S.lon=parseFloat(lon); S.city=name;
+  closeAll();
+  loadPrayers();
+  toast('📍 '+name);
+}
+
+// ══════════════════════════════════════════
+// PRAYER TIMES
+// ══════════════════════════════════════════
+async function loadPrayers(){
+  document.getElementById('loading').classList.remove('hide');
+  document.getElementById('loading-txt').textContent='جارٍ تحميل المواقيت…';
+  try{
+    const d=new Date();
+    const url=`https://api.aladhan.com/v1/timings/${d.getDate()}-${d.getMonth()+1}-${d.getFullYear()}?latitude=${S.lat}&longitude=${S.lon}&method=${S.method}`;
+    const res=await fetch(url);
+    const data=await res.json();
+    if(data.code!==200)throw new Error();
+    S.times=data.data.timings;
+    S.hijriBase=data.data.date.hijri;
+    S.hijriOffset=0;
+
+    document.getElementById('city-lbl').textContent=S.city;
+    updateHijriDisplay();
+
+    const m=METHODS.find(x=>x.id===S.method);
+    document.getElementById('method-display').textContent=m?m.name.split('(')[0].trim():'—';
+
+    renderPrayers();
+    startCountdown();
+    document.getElementById('loading').classList.add('hide');
+  }catch(e){
+    document.getElementById('loading').classList.add('hide');
+    toast('❌ فشل تحميل المواقيت');
+  }
+}
+
+function renderPrayers(){
+  const nm=nowMin();
+  let curIdx=-1;
+  const PRAYER_KEYS=['Fajr','Dhuhr','Asr','Maghrib','Isha'];
+  const tPrayers=T().prayers;
+  tPrayers.forEach((p,i)=>{
+    if(!PRAYER_KEYS.includes(p.k))return;
+    if(S.times[p.k]&&toMin(S.times[p.k])<=nm)curIdx=i;
+  });
+  const list=document.getElementById('prayers-list');
+  list.innerHTML='';
+  tPrayers.forEach((p,i)=>{
+    if(!S.times[p.k])return;
+    const pm=toMin(S.times[p.k]);
+    const isCur=i===curIdx,passed=pm<nm&&!isCur;
+    const row=document.createElement('div');
+    row.className='p-row'+(isCur?' current':'')+(passed?' passed':'');
+    row.innerHTML=`${isCur?'<div class="current-pip"></div>':''}<div class="p-icon">${p.icon}</div><div class="p-name-ar">${p.name}</div><div class="p-time">${fmt(S.times[p.k])}</div>`;
+    list.appendChild(row);
+  });
+}
+
+function getNext(){
+  const nm=nowMin();
+  const tPrayers=T().prayers;
+  for(let i=0;i<tPrayers.length;i++){
+    const p=tPrayers[i];
+    if(!S.times[p.k])continue;
+    const pm=toMin(S.times[p.k]);
+    if(pm>nm){
+      const prevKey=tPrayers[Math.max(0,i-1)].k;
+      const prevMin=S.times[prevKey]?toMin(S.times[prevKey]):0;
+      return{meta:p,mins:pm-nm,time:fmt(S.times[p.k]),total:pm-prevMin};
+    }
+  }
+  const fajrMin=toMin(S.times['Fajr']||'05:00');
+  return{meta:tPrayers[0],mins:(1440-nm)+fajrMin,time:fmt(S.times['Fajr']||'05:00'),total:fajrMin+1440-nm};
+}
+
+const CIRC=2*Math.PI*72;
+function startCountdown(){
+  if(S.timer)clearInterval(S.timer);
+  function tick(){
+    if(!S.times['Fajr'])return;
+    const next=getNext();
+    document.getElementById('next-name').textContent=next.meta.name||next.meta.ar||'—';
+    document.getElementById('next-time').textContent=next.time;
+    const h=Math.floor(next.mins/60),m=next.mins%60;
+    document.getElementById('countdown-val').textContent=h>0?`${h}:${String(m).padStart(2,'0')}`:`${String(m).padStart(2,'0')} د`;
+    const pct=Math.max(0,Math.min(1,1-(next.mins/(next.total||1))));
+    document.getElementById('ring-fill').style.strokeDashoffset=CIRC-(pct*CIRC);
+    renderPrayers();
+  }
+  tick();
+  S.timer=setInterval(tick,60000);
+}
+
+// ══════════════════════════════════════════
+// WEEK MODAL
+// ══════════════════════════════════════════
+function openWeekModal(){
+  document.getElementById('week-modal').classList.add('open');
+  loadWeek();
+}
+
+async function loadWeek(){
+  const el=document.getElementById('week-content');
+  el.innerHTML='<div class="week-loading">⏳ جارٍ التحميل…</div>';
+  const WEEK_PRAYERS=[
+    {k:'Fajr',ar:'فجر'},{k:'Dhuhr',ar:'ظهر'},
+    {k:'Asr',ar:'عصر'},{k:'Maghrib',ar:'مغرب'},{k:'Isha',ar:'عشاء'}
+  ];
+  const AR_DAYS=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  const today=new Date();
+  let html='';
+
+  for(let i=0;i<7;i++){
+    const d=new Date(today);
+    d.setDate(today.getDate()+i+1); // next 7 days
+    try{
+      const url=`https://api.aladhan.com/v1/timings/${d.getDate()}-${d.getMonth()+1}-${d.getFullYear()}?latitude=${S.lat}&longitude=${S.lon}&method=${S.method}`;
+      const res=await fetch(url);
+      const data=await res.json();
+      const t=data.data.timings;
+      const hd=data.data.date.hijri;
+      const dayName=AR_DAYS[d.getDay()];
+      const dateStr=`${d.getDate()}/${d.getMonth()+1} — ${hd.day} ${hd.month.ar}`;
+      const pills=WEEK_PRAYERS.map(p=>`<div class="wt-pill"><div class="wtp-name">${p.ar}</div><div class="wtp-time">${fmt(t[p.k]||'--:--')}</div></div>`).join('');
+      html+=`<div class="week-day-card"><div class="week-day-header"><div class="wdh-day">${dayName}</div><div class="wdh-date">${dateStr}</div></div><div class="week-times">${pills}</div></div>`;
+    }catch(e){
+      html+=`<div class="week-day-card"><div class="week-day-header"><div class="wdh-day">يوم ${i+1}</div><div class="wdh-date">—</div></div><div style="font-size:12px;color:var(--text-dim)">تعذّر التحميل</div></div>`;
+    }
+  }
+  el.innerHTML=html;
+}
+
+// ══════════════════════════════════════════
+// HIJRI CALENDAR +/-
+// Shifts ONLY the hijri day display — gregorian date stays fixed (today)
+// Useful when official moon sighting differs from astronomical calc by ±1 day
+// ══════════════════════════════════════════
+
+// Hijri months data
+const HIJRI_MONTHS = [
+  {ar:'محرم',days:30},{ar:'صفر',days:29},{ar:'ربيع الأول',days:30},
+  {ar:'ربيع الثاني',days:29},{ar:'جمادى الأولى',days:30},{ar:'جمادى الثانية',days:29},
+  {ar:'رجب',days:30},{ar:'شعبان',days:29},{ar:'رمضان',days:30},
+  {ar:'شوال',days:29},{ar:'ذو القعدة',days:30},{ar:'ذو الحجة',days:29},
+];
+
+function adjustHijri(delta){
+  S.hijriOffset+=delta;
+  // Clamp to ±2 days max (only moon sighting correction)
+  S.hijriOffset=Math.max(-2,Math.min(2,S.hijriOffset));
+  updateHijriDisplay();
+  // Save preference
+  try{localStorage.setItem('hijriOffset',S.hijriOffset);}catch(e){}
+}
+
+function shiftHijriDate(baseHd, delta){
+  // baseHd = { day: "08", month: { ar: "شوال", number: "10" }, year: "1447" }
+  if(delta===0) return baseHd;
+
+  let day   = parseInt(baseHd.day);
+  let month = parseInt(baseHd.month.number); // 1-based
+  let year  = parseInt(baseHd.year);
+
+  day += delta;
+
+  // Roll forward
+  while(day > HIJRI_MONTHS[month-1].days){
+    day -= HIJRI_MONTHS[month-1].days;
+    month++;
+    if(month>12){month=1;year++;}
+  }
+  // Roll backward
+  while(day < 1){
+    month--;
+    if(month<1){month=12;year--;}
+    day += HIJRI_MONTHS[month-1].days;
+  }
+
+  return {
+    day: String(day).padStart(2,'0'),
+    month: { ar: HIJRI_MONTHS[month-1].ar, number: String(month) },
+    year: String(year),
+  };
+}
+
+function updateHijriDisplay(){
+  if(!S.hijriBase) return;
+
+  // Gregorian = always TODAY (never changes)
+  const today = new Date();
+  const gregStr = today.toLocaleDateString('ar-MA',{
+    weekday:'long', day:'numeric', month:'long', year:'numeric'
+  });
+
+  // Hijri = base from API shifted by offset (pure arithmetic, no API call)
+  const hd = shiftHijriDate(S.hijriBase, S.hijriOffset);
+
+  document.getElementById('h-month').textContent = hd.month.ar;
+  document.getElementById('h-day').textContent   = hd.day;
+  document.getElementById('h-year').textContent  = hd.year + ' هـ';
+  document.getElementById('h-greg').textContent  = gregStr;
+  document.getElementById('hijri-lbl').textContent = `${hd.day} ${hd.month.ar}`;
+
+  // Offset badge
+  const adjEl = document.getElementById('adj-info');
+  if(S.hijriOffset !== 0){
+    adjEl.style.display = 'block';
+    const sign = S.hijriOffset > 0 ? '+' : '';
+    adjEl.textContent = `تصحيح رؤية الهلال: ${sign}${S.hijriOffset} يوم`;
+  } else {
+    adjEl.style.display = 'none';
+  }
+
+  // Ramadan banner
+  const monthNum = parseInt(hd.month.number);
+  if(monthNum === 9){
+    document.getElementById('ramadan-bar').style.display = 'flex';
+    document.getElementById('ramadan-info').textContent  = `اليوم ${parseInt(hd.day)} من رمضان`;
+  } else {
+    document.getElementById('ramadan-bar').style.display = 'none';
+  }
+}
+
+// ══════════════════════════════════════════
+// METHOD MODAL
+// ══════════════════════════════════════════
+function openMethodModal(){
+  const list=document.getElementById('method-list');
+  list.innerHTML='';
+  T().methods.forEach(m=>{
+    const div=document.createElement('div');
+    div.className='modal-option';
+    div.innerHTML=`<div><div class="mo-name">${m.name}</div><div class="mo-desc">${m.desc}</div></div>${m.id===S.method?'<div class="mo-check">✓</div>':''}`;
+    div.onclick=()=>{S.method=m.id;closeAll();loadPrayers();toast('✔ '+(S.lang==='ar'?'تم تغيير الطريقة':'Method updated'));};
+    list.appendChild(div);
+  });
+  document.getElementById('method-modal').classList.add('open');
+}
+
+// ══════════════════════════════════════════
+// ADHAN — Audio + Notification + Vibration
+// 2 voices: Moroccan + Oriental
+// ══════════════════════════════════════════
+
+// ── Adhan voices catalogue ──
+const ADHAN_VOICES = [
+  {
+    id: 'moroccan',
+    name: 'أذان مغربي 1',
+    name_fr: 'Adhan Marocain 1',
+    emoji: '🇲🇦',
+    desc: 'الطابع المغربي الأصيل',
+    urls: ['./adhan-moroccan.mp3'],
+  },
+  {
+    id: 'moroccan2',
+    name: 'أذان مغربي 2',
+    name_fr: 'Adhan Marocain 2',
+    emoji: '🕌',
+    desc: 'رواية مغربية مختارة',
+    urls: ['./adhan-moroccan2.mp3'],
+  },
+];
+
+// State
+S.adhanVoice    = 'moroccan'; // default — أذان مغربي 1
+S.lastFiredPrayer = '';
+S.adhanAudio    = null;
+S.notifGranted  = false;
+
+// ── Adhan modal ──
+function openAdhanModal(){
+  const list = document.getElementById('adhan-options-list');
+  const testBtn = document.querySelector('#adhan-modal .modal-sheet > button');
+  list.innerHTML = '';
+  const voices = T().voices;
+  ADHAN_VOICES.forEach((v,i) => {
+    const tv = voices[i] || v;
+    const div = document.createElement('div');
+    div.className = 'modal-option';
+    const isActive = S.adhanVoice === v.id;
+    div.innerHTML = `
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="font-size:28px">${v.emoji}</div>
+        <div>
+          <div class="mo-name">${tv.name}</div>
+          <div class="mo-desc">${tv.desc}</div>
+        </div>
+      </div>
+      ${isActive ? '<div class="mo-check">✓</div>' : ''}`;
+    div.onclick = () => {
+      S.adhanVoice = v.id;
+      try{ localStorage.setItem('adhanVoice', v.id); }catch(e){}
+      closeAll();
+      toast(`${v.emoji} ${tv.name}`);
+    };
+    list.appendChild(div);
+  });
+  document.getElementById('adhan-modal').classList.add('open');
+}
+
+function testAdhan(){
+  unlockAudio();
+  stopAdhan();
+  // Small delay to let AudioContext resume
+  setTimeout(() => {
+    playAdhanAudio();
+    toast('▶ جارٍ تشغيل الأذان…');
+  }, 200);
+}
+
+// ── Toggle on/off ──
+function toggleAdhan(){
+  S.adhan = !S.adhan;
+  const on = S.adhan;
+  try{ localStorage.setItem('adhan', on ? '1' : '0'); }catch(e){}
+  document.getElementById('adhan-pill').classList.toggle('on', on);
+  document.getElementById('adhan-icon').textContent = on ? '🔔' : '🔕';
+  document.getElementById('adhan-lbl').textContent  = on ? 'أذان مفعّل' : 'صامت';
+  document.getElementById('aq-icon').textContent    = on ? '🔔' : '🔕';
+  document.getElementById('aq-lbl').textContent     = on ? 'أذان' : 'صامت';
+  document.getElementById('adhan-quick').classList.toggle('adhan-on', on);
+  if(on){ unlockAudio(); requestNotifPermission(); toast('🔔 تم تفعيل الأذان'); }
+  else  { stopAdhan(); toast('🔕 تم إيقاف الأذان'); }
+}
+
+// ── Notification permission ──
+async function requestNotifPermission(){
+  if(!('Notification' in window)) return;
+  if(Notification.permission === 'granted'){ S.notifGranted = true; return; }
+  if(Notification.permission !== 'denied'){
+    const perm = await Notification.requestPermission();
+    S.notifGranted = (perm === 'granted');
+  }
+}
+
+// ── Web Audio fallback tone (offline) ──
+// Moroccan style: maqam Rast (do-re-mi-fa naturel)
+// Oriental style: maqam Bayati (quarter-tone feel simulated)
+function generateAdhanTone(style){
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const master = ctx.createGain();
+    master.gain.value = 0.65;
+    master.connect(ctx.destination);
+
+    // Moroccan: Rast maqam feel — rounder, descending cadence
+    const moroccan = [
+      [392,0.0,0.4],[440,0.4,0.3],[494,0.7,0.5],[440,1.2,0.4],[392,1.6,0.6],
+      [349,2.4,0.3],[370,2.7,0.3],[392,3.0,0.5],[440,3.5,0.3],[392,3.8,0.7],
+      [330,4.8,0.3],[349,5.1,0.4],[392,5.5,0.6],[440,6.1,0.5],[392,6.6,0.9],
+    ];
+    // Oriental: Bayati feel — starts on E, flattened 2nd
+    const oriental = [
+      [330,0.0,0.3],[311,0.3,0.3],[349,0.6,0.5],[392,1.1,0.4],[440,1.5,0.6],
+      [494,2.1,0.4],[440,2.5,0.3],[392,2.8,0.5],[349,3.3,0.4],[330,3.7,0.7],
+      [294,4.6,0.3],[311,4.9,0.4],[349,5.3,0.5],[392,5.8,0.4],[440,6.2,0.3],[494,6.5,0.5],[440,7.0,0.3],[392,7.3,0.9],
+    ];
+
+    const phrase = style === 'moroccan' ? moroccan : oriental;
+    phrase.forEach(([freq, start, dur]) => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, ctx.currentTime + start);
+      gain.gain.linearRampToValueAtTime(0.55, ctx.currentTime + start + 0.06);
+      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + start + dur);
+      osc.connect(gain); gain.connect(master);
+      osc.start(ctx.currentTime + start);
+      osc.stop(ctx.currentTime + start + dur + 0.1);
+    });
+    setTimeout(() => { try{ ctx.close(); }catch(e){} }, 10000);
+    return true;
+  }catch(e){ return false; }
+}
+
+// ── Audio unlock + preload system ──
+// Browsers block autoplay unless user has interacted first.
+// Solution: create AudioContext on first user tap, preload MP3 into buffer.
+
+S.audioCtx      = null;
+S.audioBuffers  = {};   // { 'moroccan': AudioBuffer, 'oriental': AudioBuffer }
+S.audioUnlocked = false;
+S.currentSource = null;
+
+// Called on ANY user interaction (tap, click)
+function unlockAudio(){
+  if(S.audioUnlocked) return;
+  try{
+    S.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // Resume if suspended
+    if(S.audioCtx.state === 'suspended') S.audioCtx.resume();
+    S.audioUnlocked = true;
+    // Preload both voices
+    ADHAN_VOICES.forEach(v => preloadAdhan(v));
+  }catch(e){}
+}
+
+async function preloadAdhan(voice){
+  if(!S.audioCtx) return;
+  if(S.audioBuffers[voice.id]) return;
+  for(const url of voice.urls){
+    try{
+      const res = await fetch(url, {cache:'force-cache'});
+      if(!res.ok) continue;
+      const arr = await res.arrayBuffer();
+      if(arr.byteLength < 1000) continue; // fichier vide ou invalide
+      S.audioBuffers[voice.id] = await S.audioCtx.decodeAudioData(arr);
+      console.log(`✓ Adhan prêt: ${voice.id} (${url})`);
+      // Update modal indicator if open
+      const active = document.querySelector(`.mo-check`);
+      if(active) active.textContent = '✓ 🔊';
+      return; // succès — stop
+    }catch(e){
+      console.warn(`✗ Adhan échec: ${url}`, e.message);
+      continue;
+    }
+  }
+  console.warn(`⚠ Adhan non chargé: ${voice.id} — fallback tone actif`);
+}
+
+function playAdhanAudio(){
+  stopAdhan();
+  const voice = ADHAN_VOICES.find(v => v.id === S.adhanVoice) || ADHAN_VOICES[0];
+
+  // ── Méthode 1 : AudioContext buffer (meilleure, bypass autoplay) ──
+  if(S.audioCtx && S.audioBuffers[voice.id]){
+    try{
+      if(S.audioCtx.state === 'suspended') S.audioCtx.resume();
+      const source = S.audioCtx.createBufferSource();
+      source.buffer = S.audioBuffers[voice.id];
+      const gain = S.audioCtx.createGain();
+      gain.gain.value = 1.0;
+      source.connect(gain);
+      gain.connect(S.audioCtx.destination);
+      source.start(0);
+      S.currentSource = source;
+      console.log(`▶ Adhan joué via AudioContext: ${voice.id}`);
+      return;
+    }catch(e){ console.warn('AudioContext play failed:', e); }
+  }
+
+  // ── Méthode 2 : HTML Audio (peut être bloqué sans geste utilisateur) ──
+  let tried = 0;
+  function tryNext(){
+    if(tried >= voice.urls.length){
+      console.warn('Toutes les URLs ont échoué — fallback tone');
+      generateAdhanTone(voice.id);
+      return;
+    }
+    const audio = new Audio();
+    audio.preload = 'auto';
+    audio.src = voice.urls[tried++];
+    audio.volume = 1.0;
+    S.adhanAudio = audio;
+    audio.onerror = (e) => { console.warn('Audio error:', e); tryNext(); };
+    audio.oncanplaythrough = () => {
+      audio.play().then(()=>{
+        console.log(`▶ Adhan HTML Audio: ${audio.src}`);
+      }).catch(err => {
+        console.warn('Autoplay blocked:', err);
+        // Dernier recours : tone synthétique
+        generateAdhanTone(voice.id);
+      });
+    };
+    setTimeout(() => { if(audio.readyState < 3) tryNext(); }, 5000);
+  }
+  tryNext();
+}
+
+function stopAdhan(){
+  // Stop AudioContext source
+  if(S.currentSource){
+    try{ S.currentSource.stop(); }catch(e){}
+    S.currentSource = null;
+  }
+  // Stop HTML Audio
+  if(S.adhanAudio){
+    try{ S.adhanAudio.pause(); S.adhanAudio.currentTime = 0; }catch(e){}
+    S.adhanAudio = null;
+  }
+}
+
+// Unlock on first tap anywhere
+document.addEventListener('touchstart', unlockAudio, { once: false, passive: true });
+document.addEventListener('click',      unlockAudio, { once: false, passive: true });
+
+// ── System notification ──
+function sendAdhanNotif(prayerName){
+  if(!S.notifGranted || !('Notification' in window)) return;
+  const voice = ADHAN_VOICES.find(v => v.id === S.adhanVoice) || ADHAN_VOICES[0];
+  try{
+    new Notification(`🕌 حان وقت ${prayerName}`, {
+      body:  `${voice.emoji} ${voice.name} — الله أكبر، حي على الصلاة`,
+      icon:  'icon-192.png',
+      badge: 'icon-192.png',
+      vibrate: [300,150,300,150,600],
+      requireInteraction: true,
+      silent: false,
+    });
+  }catch(e){}
+}
+
+// ── Vibration ──
+function vibrateAdhan(){
+  if(!navigator.vibrate) return;
+  navigator.vibrate([200,100,200,100,200,300,600]);
+}
+
+// ── Main trigger ──
+function triggerAdhan(prayerName){
+  if(!S.adhan) return;
+  vibrateAdhan();
+  sendAdhanNotif(prayerName);
+  playAdhanAudio();
+  toast(`🕌 حان وقت ${prayerName}`);
+}
+
+// ── Watcher: checks every 15s ──
+function startAdhanWatcher(){
+  if(S.adhanWatcher) clearInterval(S.adhanWatcher);
+  S.adhanWatcher = setInterval(() => {
+    if(!S.adhan || !S.times['Fajr']) return;
+    const now = new Date();
+    const nm  = now.getHours() * 60 + now.getMinutes();
+    const sec = now.getSeconds();
+    if(sec > 15) return;
+
+    // Exact prayer time
+    PRAYERS.forEach(p => {
+      if(!S.times[p.k]) return;
+      if(toMin(S.times[p.k]) === nm){
+        const key = p.k + '_' + now.toDateString();
+        if(S.lastFiredPrayer !== key){ S.lastFiredPrayer = key; triggerAdhan(p.ar); }
+      }
+    });
+
+    // 10-min reminder
+    PRAYERS.forEach(p => {
+      if(!S.times[p.k]) return;
+      if(toMin(S.times[p.k]) - 10 === nm){
+        const key = 'pre_' + p.k + '_' + now.toDateString();
+        if(S.lastFiredPrayer !== key){
+          S.lastFiredPrayer = key;
+          if(S.notifGranted) try{
+            new Notification(`⏰ ${p.ar} بعد 10 دقائق`,{body:'استعد للصلاة',icon:'icon-192.png',silent:true,vibrate:[100,50,100]});
+          }catch(e){}
+          navigator.vibrate && navigator.vibrate([100,50,100]);
+        }
+      }
+    });
+  }, 15000);
+}
+
+// ══════════════════════════════════════════
+// QIBLA
+// ══════════════════════════════════════════
+let qiblaReady=false;
+function calcQibla(lat,lon){
+  const dLon=(39.8262-lon)*Math.PI/180;
+  const la1=lat*Math.PI/180,la2=21.4225*Math.PI/180;
+  const y=Math.sin(dLon)*Math.cos(la2);
+  const x=Math.cos(la1)*Math.sin(la2)-Math.sin(la1)*Math.cos(la2)*Math.cos(dLon);
+  return((Math.atan2(y,x)*180/Math.PI)+360)%360;
+}
+function calcDist(la1,lo1,la2,lo2){
+  const R=6371,dLa=(la2-la1)*Math.PI/180,dLo=(lo2-lo1)*Math.PI/180;
+  const a=Math.sin(dLa/2)**2+Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dLo/2)**2;
+  return Math.round(R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)));
+}
+function drawTicks(){
+  const svg=document.querySelector('.c-svg g#ticks');
+  if(!svg||svg.children.length>0)return;
+  for(let i=0;i<72;i++){
+    const angle=i*5,isMajor=i%9===0,len=isMajor?13:7,r=118;
+    const rad=angle*Math.PI/180;
+    const x1=130+r*Math.sin(rad),y1=130-r*Math.cos(rad);
+    const x2=130+(r-len)*Math.sin(rad),y2=130-(r-len)*Math.cos(rad);
+    const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',x1);line.setAttribute('y1',y1);
+    line.setAttribute('x2',x2);line.setAttribute('y2',y2);
+    line.setAttribute('stroke',isMajor?'rgba(255,255,255,.2)':'rgba(255,255,255,.08)');
+    line.setAttribute('stroke-width',isMajor?'1.5':'1');
+    svg.appendChild(line);
+  }
+}
+function initQibla(){
+  if(qiblaReady)return;
+  qiblaReady=true;
+  drawTicks();
+  S.qiblaAngle=calcQibla(S.lat,S.lon);
+  const dist=calcDist(S.lat,S.lon,21.4225,39.8262);
+  document.getElementById('q-angle').textContent=Math.round(S.qiblaAngle)+'°';
+  document.getElementById('qi-loc').textContent=`${S.lat.toFixed(2)}°, ${S.lon.toFixed(2)}°`;
+  document.getElementById('qi-bear').textContent=Math.round(S.qiblaAngle)+T().from_north;
+  document.getElementById('qi-dist').textContent=dist.toLocaleString()+' '+T().km;
+  document.getElementById('c-kaaba-wrap').style.transform=`rotate(${S.qiblaAngle}deg)`;
+  const handler=e=>{
+    const h=e.webkitCompassHeading!==undefined?e.webkitCompassHeading:(360-(e.alpha||0));
+    S.compassHeading=h;
+    document.getElementById('c-needle-wrap').style.transform=`rotate(${-h}deg)`;
+    document.getElementById('c-kaaba-wrap').style.transform=`rotate(${S.qiblaAngle-h}deg)`;
+    const diff=Math.abs(((S.qiblaAngle-h+540)%360)-180);
+    const st=document.getElementById('q-status');
+    st.textContent=diff<5?T().facing_qibla:`${T().rotate}${Math.round(diff)}°`;
+  };
+  if(window.DeviceOrientationEvent){
+    if(typeof DeviceOrientationEvent.requestPermission==='function'){
+      DeviceOrientationEvent.requestPermission().then(p=>{if(p==='granted')window.addEventListener('deviceorientation',handler);else setManualQ();}).catch(setManualQ);
+    }else{window.addEventListener('deviceorientation',handler);}
+  }else setManualQ();
+}
+function setManualQ(){document.getElementById('q-status').textContent=`🕋 ${Math.round(S.qiblaAngle)}${T().manual_qibla}`;}
+
+// ══════════════════════════════════════════
+// DHIKR
+// ══════════════════════════════════════════
+function setDhikr(cat,btn){S.dhikrCat=cat;S.dhikrIdx=0;S.count=0;document.querySelectorAll('.dn-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');updateDhikrUI();}
+function updateDhikrUI(){
+  const z=T().dhikr_cats[S.dhikrCat][S.dhikrIdx];
+  document.getElementById('d-ar').textContent=z.ar;
+  document.getElementById('d-fr').textContent=z.tr;
+  document.getElementById('cnt-num').textContent=S.count;
+  document.getElementById('cnt-of').textContent=(S.lang==='ar'?'من ':'/ ')+z.n;
+  document.getElementById('cnt-btn').classList.toggle('done',S.count>=z.n);
+}
+function countUp(){
+  const z=T().dhikr_cats[S.dhikrCat][S.dhikrIdx];
+  if(S.count<z.n){S.count++;updateDhikrUI();}
+  if(S.count===z.n)toast(S.lang==='ar'?'✔ اكتمل الذكر':'✔ Dhikr complete');
+}
+function resetCount(){S.count=0;updateDhikrUI();}
+function nextZikr(){S.dhikrIdx=(S.dhikrIdx+1)%T().dhikr_cats[S.dhikrCat].length;S.count=0;updateDhikrUI();}
+
+// ══════════════════════════════════════════
+// SERVICE WORKER
+// ══════════════════════════════════════════
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+// Restore saved preferences
+try{
+  S.hijriOffset = parseInt(localStorage.getItem('hijriOffset') || '0');
+  const savedLang  = localStorage.getItem('lang');
+  if(savedLang) S.lang = savedLang;
+  const savedAdhan = localStorage.getItem('adhan');
+  const savedVoice = localStorage.getItem('adhanVoice');
+  if(savedVoice) S.adhanVoice = savedVoice;
+  if(savedAdhan === '0'){
+    S.adhan = false;
+    document.getElementById('adhan-pill').classList.remove('on');
+    document.getElementById('adhan-icon').textContent = '🔕';
+    document.getElementById('adhan-lbl').textContent  = T().adhan_off;
+    document.getElementById('aq-icon').textContent    = '🔕';
+    document.getElementById('aq-lbl').textContent     = T().adhan_off;
+    document.getElementById('adhan-quick').classList.remove('adhan-on');
+  }
+}catch(e){}
+
+// Apply language (sets dir, updates all labels)
+applyLang();
+
+// Request notification permission if adhan is on
+if(S.adhan) requestNotifPermission();
+
+// Start adhan watcher
+startAdhanWatcher();
+
+initLocation();
+</script>
+</body>
+</html>
