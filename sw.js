@@ -1,6 +1,6 @@
-const CACHE='salati-v3',BASE='/SaLaTi';
+const CACHE='salati-v3',BASE='./SaLaTi';
 self.addEventListener('install',e=>{
-  e.waitUntil(caches.open(CACHE).then(c=>c.addAll([BASE+'/',BASE+'/index.html',BASE+'/manifest.json',BASE+'/icon-192.png',BASE+'/icon-512.png'])).then(()=>self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then(c=>c.addAll([BASE+'/',BASE+'./index.html',BASE+'./manifest.json',BASE+'./icon-192.png',BASE+'./icon-512.png'])).then(()=>self.skipWaiting()));
 });
 self.addEventListener('activate',e=>{
   e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));
@@ -16,7 +16,7 @@ self.addEventListener('fetch',e=>{
   if(u.pathname.endsWith('.mp3')||u.hostname.includes('googleapis')||u.hostname.includes('gstatic')){
     e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request).then(r=>{caches.open(CACHE+'rt').then(x=>x.put(e.request,r.clone()));return r;})));return;
   }
-  e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request).catch(()=>caches.match(BASE+'/index.html'))));
+  e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request).catch(()=>caches.match(BASE+'./index.html'))));
 });
 self.addEventListener('push',e=>{
   const d=e.data?e.data.json():{};
