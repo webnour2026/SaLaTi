@@ -1,0 +1,45 @@
+{
+  "name": "SaLaTi — Prayer Times & Qibla",
+  "short_name": "SaLaTi",
+  "description": "SaLaTi is a free, elegant Islamic app for Muslims worldwide. Accurate prayer times, Qibla compass, Hijri calendar, Moroccan & Makkah Adhan, Dhikr counter. No ads. Works offline.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/SaLaTi/index.html",
+  "scope": "/SaLaTi/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#0b0f0e",
+  "theme_color": "#0b0f0e",
+  "categories": ["lifestyle", "utilities", "religion"],
+  "icons": [
+    {"src": "icon-192.png",          "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icon-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable"},
+    {"src": "icon-512.png",          "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot-540x720.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Prayer Times — مواقيت الصلاة"
+    },
+    {
+      "src": "screenshot-1280x720.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Qibla Compass — القبلة"
+    }
+  ],
+  "shortcuts": [
+    {"name": "Prayer Times", "short_name": "Prayers", "description": "View today's prayer times",    "url": "/SaLaTi/index.html#prayers", "icons": [{"src": "icon-192.png", "sizes": "192x192"}]},
+    {"name": "Qibla Direction","short_name": "Qibla",  "description": "Find the direction of Makkah","url": "/SaLaTi/index.html#qibla",   "icons": [{"src": "icon-192.png", "sizes": "192x192"}]},
+    {"name": "Dhikr Counter",  "short_name": "Dhikr",  "description": "Daily dhikr and tasbih",     "url": "/SaLaTi/index.html#dhikr",   "icons": [{"src": "icon-192.png", "sizes": "192x192"}]}
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "launch_handler": {"client_mode": "focus-existing"}
+}
