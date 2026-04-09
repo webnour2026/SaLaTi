@@ -1,16 +1,16 @@
-const CACHE = 'salati-v3';
-const RUNTIME_CACHE = 'salati-rt-v3';
-const BASE = '/SaLaTi';
+const CACHE = 'salati-v4';
+const RUNTIME_CACHE = 'salati-runtime-v4';
+const BASE = '/SaLaTi/';
 
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE).then(c =>
       c.addAll([
-        BASE + '/',
-        BASE + '/index.html',
-        BASE + '/manifest.json',
-        BASE + '/icon-192.png',
-        BASE + '/icon-512.png'
+        BASE,
+        BASE + 'index.html',
+        BASE + 'manifest.json',
+        BASE + 'icon-192.png',
+        BASE + 'icon-512.png'
       ])
     ).then(() => self.skipWaiting())
   );
@@ -19,47 +19,59 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.map(k => {
-        if (k !== CACHE && k !== RUNTIME_CACHE) return caches.delete(k);
-      }))
+      Promise.all(
+        keys.map(k => {
+          if (k !== CACHE && k !== RUNTIME_CACHE) return caches.delete(k);
+        })
+      )
     ).then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('fetch', e => {
-  const u = new URL(e.request.url);
+  const req = e.request;
+  const url = new URL(req.url);
 
-  if (u.hostname === 'api.aladhan.com') {
+  if (req.mode === 'navigate') {
     e.respondWith(
-      fetch(e.request)
-        .then(r => {
-          caches.open(RUNTIME_CACHE).then(c => c.put(e.request, r.clone()));
-          return r;
-        })
-        .catch(() => caches.match(e.request))
+      fetch(req).catch(() => caches.match(BASE + 'index.html'))
     );
     return;
   }
 
-  if (u.hostname === 'nominatim.openstreetmap.org') {
+  if (url.hostname === 'api.aladhan.com') {
     e.respondWith(
-      fetch(e.request).catch(() =>
-        new Response('{}', { headers: { 'Content-Type': 'application/json' } })
+      fetch(req)
+        .then(r => {
+          caches.open(RUNTIME_CACHE).then(c => c.put(req, r.clone()));
+          return r;
+        })
+        .catch(() => caches.match(req))
+    );
+    return;
+  }
+
+  if (url.hostname === 'nominatim.openstreetmap.org') {
+    e.respondWith(
+      fetch(req).catch(() =>
+        new Response('{}', {
+          headers: { 'Content-Type': 'application/json' }
+        })
       )
     );
     return;
   }
 
   if (
-    u.pathname.endsWith('.mp3') ||
-    u.hostname.includes('googleapis') ||
-    u.hostname.includes('gstatic')
+    url.pathname.endsWith('.mp3') ||
+    url.hostname.includes('googleapis') ||
+    url.hostname.includes('gstatic')
   ) {
     e.respondWith(
-      caches.match(e.request).then(cached =>
+      caches.match(req).then(cached =>
         cached ||
-        fetch(e.request).then(r => {
-          caches.open(RUNTIME_CACHE).then(c => c.put(e.request, r.clone()));
+        fetch(req).then(r => {
+          caches.open(RUNTIME_CACHE).then(c => c.put(req, r.clone()));
           return r;
         })
       )
@@ -68,9 +80,6 @@ self.addEventListener('fetch', e => {
   }
 
   e.respondWith(
-    caches.match(e.request).then(cached =>
-      cached ||
-      fetch(e.request).catch(() => caches.match(BASE + '/index.html'))
-    )
+    caches.match(req).then(cached => cached || fetch(req))
   );
 });
