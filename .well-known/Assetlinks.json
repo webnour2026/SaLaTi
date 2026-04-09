@@ -2,9 +2,9 @@
   "relation": ["delegate_permission/common.handle_all_urls"],
   "target": {
     "namespace": "android_app",
-    "package_name": "com.webnour.salati",
+    "package_name": "io.github.webnour2026.twa",
     "sha256_cert_fingerprints": [
-      "REPLACE_WITH_PWABUILDER_FINGERPRINT"
+      "07:44:E3:E8:0B:C5:10:29:2A:C9:9C:06:DB:F1:53:AD:AD:1B:56:AF:59:F8:95:C0:CD:D6:E6:73:58:4F:89:A9"
     ]
   }
 }]
