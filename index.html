@@ -936,7 +936,9 @@ function resetCount(){S.count=0;updateDhikr();}
 function nextZikr(){S.dhikrIdx=(S.dhikrIdx+1)%T().dk[S.dhikrCat].length;S.count=0;updateDhikr();}
 
 // ═══ SERVICE WORKER ═══
-if('serviceWorker'in if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js', {scope: './'}).catch(()=>{});;
+if('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js', {scope: './'}).catch(()=>{});
+}
 // ═══ INIT ═══
 try{
   const sl=localStorage.getItem('lang');if(sl)S.lang=sl;
