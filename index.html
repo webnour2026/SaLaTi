@@ -9,8 +9,8 @@
 <meta name="apple-mobile-web-app-title" content="SaLaTi">
 <meta name="application-name" content="SaLaTi">
 <meta name="description" content="SaLaTi — Accurate prayer times, Qibla direction, Hijri calendar, Adhan & Dhikr. Free, offline, no ads.">
-<link rel="manifest" href="/SaLaTi/manifest.json">
-<link rel="apple-touch-icon" href="/SaLaTi/icon-192.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
 <title>SaLaTi — مواقيت الصلاة</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -936,8 +936,7 @@ function resetCount(){S.count=0;updateDhikr();}
 function nextZikr(){S.dhikrIdx=(S.dhikrIdx+1)%T().dk[S.dhikrCat].length;S.count=0;updateDhikr();}
 
 // ═══ SERVICE WORKER ═══
-if('serviceWorker'in navigator)navigator.serviceWorker.register('/SaLaTi/sw.js',{scope:'/SaLaTi/'}).catch(()=>{});
-
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 // ═══ INIT ═══
 try{
   const sl=localStorage.getItem('lang');if(sl)S.lang=sl;
