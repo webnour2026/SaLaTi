@@ -1,0 +1,77 @@
+{
+  "name": "SaLaTi — Prayer Times & Qibla",
+  "short_name": "SaLaTi",
+  "description": "SaLaTi is a free, elegant Islamic app for Muslims worldwide. Accurate prayer times, Qibla compass, Hijri calendar, Moroccan & Makkah Adhan, Dhikr counter. No ads. Works offline.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/SaLaTi/",
+  "scope": "/SaLaTi/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0f0e",
+  "theme_color": "#0b0f0e",
+  "categories": ["lifestyle", "utilities", "religion"],
+  "icons": [
+    {
+      "src": "/SaLaTi/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/SaLaTi/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/SaLaTi/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/SaLaTi/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/SaLaTi/screenshot-540x720.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Prayer Times — مواقيت الصلاة"
+    },
+    {
+      "src": "/SaLaTi/screenshot-1280x720.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Qibla Compass — القبلة"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Prayer Times",
+      "short_name": "Prayers",
+      "url": "/SaLaTi/#prayers",
+      "icons": [{ "src": "/SaLaTi/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Qibla",
+      "short_name": "Qibla",
+      "url": "/SaLaTi/#qibla",
+      "icons": [{ "src": "/SaLaTi/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Dhikr",
+      "short_name": "Dhikr",
+      "url": "/SaLaTi/#dhikr",
+      "icons": [{ "src": "/SaLaTi/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "prefer_related_applications": false
+}
