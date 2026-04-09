@@ -1,6 +1,6 @@
 const CACHE = 'salati-v4';
 const RUNTIME_CACHE = 'salati-runtime-v4';
-const BASE = '/SaLaTi/';
+const BASE = './';
 
 self.addEventListener('install', e => {
   e.waitUntil(
