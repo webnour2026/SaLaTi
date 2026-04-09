@@ -1,13 +1,13 @@
 const CACHE = 'salati-v2';
 const RUNTIME = 'salati-rt-v2';
-const BASE = '/SaLaTi';
+const BASE = '/SaLaTi/';
 
 const PRECACHE = [
-  BASE + '/',
-  BASE + '/index.html',
-  BASE + '/manifest.json',
-  BASE + '/icon-192.png',
-  BASE + '/icon-512.png',
+  BASE,
+  BASE + 'index.html',
+  BASE + 'manifest.json',
+  BASE + 'icon-192.png',
+  BASE + 'icon-512.png',
 ];
 
 self.addEventListener('install', e => {
