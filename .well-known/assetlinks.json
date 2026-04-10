@@ -1,14 +1,10 @@
-[
-  {
-    "relation": [
-      "delegate_permission/common.handle_all_urls"
-    ],
-    "target": {
-      "namespace": "android_app",
-      "package_name": "io.github.webnour2026.twa",
-      "sha256_cert_fingerprints": [
-        "78:E3:71:D6:CA:45:91:7D:12:C0:2E:6F:D4:9F:1D:60:9D:20:B5:28:E8:59:73:03:37:7C:F1:3B:BF:FA:7F:D1"
-      ]
-    }
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "io.github.webnour2026.twa",
+    "sha256_cert_fingerprints": [
+      "16:63:0B:1F:A5:F1:60:86:66:D2:66:0C:A6:31:FC:52:C6:B4:8D:1E:98:1E:1B:59:2B:7A:DF:C9:F3:C8:13:83"
+    ]
   }
-]
+}]
