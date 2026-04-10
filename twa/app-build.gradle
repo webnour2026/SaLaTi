@@ -1,0 +1,30 @@
+apply plugin: 'com.android.application'
+android {
+    namespace 'io.github.webnour2026.twa'
+    compileSdkVersion 34
+    defaultConfig {
+        applicationId 'io.github.webnour2026.twa'
+        minSdkVersion 21
+        targetSdkVersion 34
+        versionCode 1
+        versionName '1.0.0'
+    }
+    signingConfigs {
+        release {
+            storeFile file(System.getenv("GITHUB_WORKSPACE") + "/salati.keystore")
+            storePassword 'salati2026'
+            keyAlias 'salati-key'
+            keyPassword 'salati2026'
+        }
+    }
+    buildTypes {
+        release { minifyEnabled false; signingConfig signingConfigs.release }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+dependencies {
+    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
+}
