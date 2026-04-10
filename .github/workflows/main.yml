@@ -1,226 +1,249 @@
 name: Build TWA SaLaTi
- 
+
 on:
   workflow_dispatch:
- 
+
 jobs:
   build:
     runs-on: ubuntu-latest
- 
+
     steps:
     - name: Checkout
       uses: actions/checkout@v4
- 
+
     - name: Setup Java 17
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '17'
- 
+
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
- 
+
     - name: Install SDK components
       run: |
         yes | sdkmanager "build-tools;34.0.0" "platforms;android-34" \
-          "extras;google;m2repository" --sdk_root=$ANDROID_SDK_ROOT 2>/dev/null || true
- 
+          --sdk_root=$ANDROID_SDK_ROOT 2>/dev/null || true
+
     - name: Generate keystore
       run: |
         keytool -genkeypair \
           -alias salati-key \
           -keyalg RSA -keysize 2048 -validity 10000 \
-          -keystore salati.keystore \
+          -keystore $GITHUB_WORKSPACE/salati.keystore \
           -storepass salati2026 -keypass salati2026 \
           -dname "CN=SaLaTi,OU=Dev,O=SaLaTi,L=Casablanca,ST=MA,C=MA" \
           -noprompt
         echo "=== SHA256 ==="
-        keytool -list -v -keystore salati.keystore \
+        keytool -list -v \
+          -keystore $GITHUB_WORKSPACE/salati.keystore \
           -storepass salati2026 -noprompt | grep SHA256
- 
+
     - name: Create TWA Android project
       run: |
-        mkdir -p twa/app/src/main
-        
+        mkdir -p twa/app/src/main/res/values
+        mkdir -p twa/app/src/main/res/xml
+        mkdir -p twa/app/src/main/res/mipmap-xxxhdpi
+        mkdir -p twa/app/src/main/res/mipmap-xxhdpi
+        mkdir -p twa/app/src/main/res/mipmap-xhdpi
+        mkdir -p twa/app/src/main/res/mipmap-hdpi
+        mkdir -p twa/app/src/main/res/mipmap-mdpi
+
+        # Download icon
+        curl -sL "https://webnour2026.github.io/SaLaTi/icon-512.png" \
+          -o twa/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+        for d in xxhdpi xhdpi hdpi mdpi; do
+          cp twa/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png \
+             twa/app/src/main/res/mipmap-$d/ic_launcher.png
+        done
+
         # settings.gradle
         cat > twa/settings.gradle << 'EOF'
-        pluginManagement {
-            repositories {
-                google(); mavenCentral(); gradlePluginPortal()
-            }
-        }
-        dependencyResolutionManagement {
-            repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-            repositories { google(); mavenCentral() }
-        }
-        rootProject.name = "SaLaTi"
-        include ':app'
-        EOF
-        
-        # build.gradle (root)
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+rootProject.name = "SaLaTi"
+include ':app'
+EOF
+
+        # build.gradle root
         cat > twa/build.gradle << 'EOF'
-        plugins {
-            id 'com.android.application' version '8.2.2' apply false
-        }
-        EOF
-        
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.2.2'
+    }
+}
+EOF
+
+        # gradle.properties
+        cat > twa/gradle.properties << 'EOF'
+android.useAndroidX=true
+android.enableJetifier=true
+EOF
+
         # app/build.gradle
         cat > twa/app/build.gradle << 'EOF'
-        plugins { id 'com.android.application' }
-        android {
-            namespace 'io.github.webnour2026.twa'
-            compileSdk 34
-            defaultConfig {
-                applicationId 'io.github.webnour2026.twa'
-                minSdk 21
-                targetSdk 34
-                versionCode 1
-                versionName '1.0.0'
-                manifestPlaceholders = [
-                    hostName: 'webnour2026.github.io',
-                    defaultUrl: 'https://webnour2026.github.io/SaLaTi/',
-                    launcherName: 'SaLaTi',
-                    themeColor: '#0b0f0e'
-                ]
-            }
-            signingConfigs {
-                release {
-                    storeFile file('/home/runner/work/SaLaTi/SaLaTi/salati.keystore')
-                    storePassword 'salati2026'
-                    keyAlias 'salati-key'
-                    keyPassword 'salati2026'
-                }
-            }
-            buildTypes {
-                release {
-                    minifyEnabled false
-                    signingConfig signingConfigs.release
-                }
-            }
+apply plugin: 'com.android.application'
+
+android {
+    namespace 'io.github.webnour2026.twa'
+    compileSdkVersion 34
+
+    defaultConfig {
+        applicationId 'io.github.webnour2026.twa'
+        minSdkVersion 21
+        targetSdkVersion 34
+        versionCode 1
+        versionName '1.0.0'
+    }
+
+    signingConfigs {
+        release {
+            storeFile file(System.getenv("GITHUB_WORKSPACE") + "/salati.keystore")
+            storePassword 'salati2026'
+            keyAlias 'salati-key'
+            keyPassword 'salati2026'
         }
-        dependencies {
-            implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
         }
-        EOF
-        
-        # AndroidManifest.xml
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
+}
+EOF
+
+        # AndroidManifest
         cat > twa/app/src/main/AndroidManifest.xml << 'EOF'
-        <?xml version="1.0" encoding="utf-8"?>
-        <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-            <application
-                android:label="SaLaTi"
-                android:icon="@mipmap/ic_launcher"
-                android:theme="@style/Theme.AppCompat.NoActionBar"
-                android:allowBackup="true">
-                <activity
-                    android:name="com.google.androidbrowserhelper.trusted.LauncherActivity"
-                    android:exported="true">
-                    <meta-data
-                        android:name="android.support.customtabs.trusted.DEFAULT_URL"
-                        android:value="https://webnour2026.github.io/SaLaTi/"/>
-                    <meta-data
-                        android:name="android.support.customtabs.trusted.STATUS_BAR_COLOR"
-                        android:value="@color/colorPrimary"/>
-                    <meta-data
-                        android:name="android.support.customtabs.trusted.STATUS_BAR_COLOR_DARK"
-                        android:value="@color/colorPrimary"/>
-                    <meta-data
-                        android:name="android.support.customtabs.trusted.NAVIGATION_BAR_COLOR"
-                        android:value="@color/colorPrimary"/>
-                    <meta-data
-                        android:name="android.support.customtabs.trusted.SPLASH_SCREEN_BACKGROUND_COLOR"
-                        android:value="@color/colorPrimary"/>
-                    <meta-data
-                        android:name="android.support.customtabs.trusted.SPLASH_SCREEN_FADE_OUT_DURATION"
-                        android:value="300"/>
-                    <meta-data
-                        android:name="android.support.customtabs.trusted.FILE_PROVIDER_AUTHORITY"
-                        android:value="io.github.webnour2026.twa.fileprovider"/>
-                    <intent-filter>
-                        <action android:name="android.intent.action.MAIN"/>
-                        <category android:name="android.intent.category.LAUNCHER"/>
-                    </intent-filter>
-                    <intent-filter android:autoVerify="true">
-                        <action android:name="android.intent.action.VIEW"/>
-                        <category android:name="android.intent.category.DEFAULT"/>
-                        <category android:name="android.intent.category.BROWSABLE"/>
-                        <data android:scheme="https"
-                              android:host="webnour2026.github.io"
-                              android:pathPrefix="/SaLaTi"/>
-                    </intent-filter>
-                </activity>
-                <provider
-                    android:name="androidx.core.content.FileProvider"
-                    android:authorities="io.github.webnour2026.twa.fileprovider"
-                    android:exported="false"
-                    android:grantUriPermissions="true">
-                    <meta-data
-                        android:name="android.support.FILE_PROVIDER_PATHS"
-                        android:resource="@xml/provider_paths"/>
-                </provider>
-            </application>
-        </manifest>
-        EOF
-        
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <application
+        android:label="SaLaTi"
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="true"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.Black.NoTitleBar">
+        <activity
+            android:name="com.google.androidbrowserhelper.trusted.LauncherActivity"
+            android:exported="true"
+            android:screenOrientation="portrait">
+            <meta-data
+                android:name="android.support.customtabs.trusted.DEFAULT_URL"
+                android:value="https://webnour2026.github.io/SaLaTi/"/>
+            <meta-data
+                android:name="android.support.customtabs.trusted.STATUS_BAR_COLOR"
+                android:resource="@color/colorPrimary"/>
+            <meta-data
+                android:name="android.support.customtabs.trusted.STATUS_BAR_COLOR_DARK"
+                android:resource="@color/colorPrimary"/>
+            <meta-data
+                android:name="android.support.customtabs.trusted.NAVIGATION_BAR_COLOR"
+                android:resource="@color/colorPrimary"/>
+            <meta-data
+                android:name="android.support.customtabs.trusted.SPLASH_SCREEN_BACKGROUND_COLOR"
+                android:resource="@color/colorPrimary"/>
+            <meta-data
+                android:name="android.support.customtabs.trusted.SPLASH_SCREEN_FADE_OUT_DURATION"
+                android:value="300"/>
+            <meta-data
+                android:name="android.support.customtabs.trusted.FILE_PROVIDER_AUTHORITY"
+                android:value="io.github.webnour2026.twa.fileprovider"/>
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data
+                    android:scheme="https"
+                    android:host="webnour2026.github.io"
+                    android:pathPrefix="/SaLaTi"/>
+            </intent-filter>
+        </activity>
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="io.github.webnour2026.twa.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths"/>
+        </provider>
+    </application>
+</manifest>
+EOF
+
         # Colors
-        mkdir -p twa/app/src/main/res/values
         cat > twa/app/src/main/res/values/colors.xml << 'EOF'
-        <?xml version="1.0" encoding="utf-8"?>
-        <resources>
-            <color name="colorPrimary">#0b0f0e</color>
-        </resources>
-        EOF
-        
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#0b0f0e</color>
+</resources>
+EOF
+
         # Provider paths
-        mkdir -p twa/app/src/main/res/xml
         cat > twa/app/src/main/res/xml/provider_paths.xml << 'EOF'
-        <?xml version="1.0" encoding="utf-8"?>
-        <paths><external-path name="external_files" path="."/></paths>
-        EOF
-        
-        # Download and add icon
-        mkdir -p twa/app/src/main/res/mipmap-xxxhdpi
-        curl -s "https://webnour2026.github.io/SaLaTi/icon-192.png" \
-          -o twa/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png 2>/dev/null || \
-          cp icon-192.png twa/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png 2>/dev/null || true
-        mkdir -p twa/app/src/main/res/mipmap-xxhdpi
-        cp twa/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png \
-           twa/app/src/main/res/mipmap-xxhdpi/ic_launcher.png 2>/dev/null || true
-        
-        echo "✓ TWA project created"
-        ls twa/app/
- 
-    - name: Build APK with Gradle
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <external-path name="external_files" path="."/>
+</paths>
+EOF
+
+        echo "=== Project structure ==="
+        find twa -type f | head -30
+
+    - name: Setup Gradle wrapper
       run: |
         cd twa
-        chmod +x gradlew 2>/dev/null || \
-          gradle wrapper --gradle-version 8.2 2>/dev/null || true
-        
-        # Download gradle wrapper if needed
-        if [ ! -f gradlew ]; then
-          cat > gradlew << 'GWEOF'
-        #!/bin/sh
-        exec gradle "$@"
-        GWEOF
-          chmod +x gradlew
-        fi
-        
-        gradle assembleRelease \
-          --no-daemon \
-          -Pandroid.sdk.root=$ANDROID_SDK_ROOT \
-          2>&1 | tail -50
- 
-    - name: Find APK
+        gradle wrapper --gradle-version=8.2 --distribution-type=bin
+        chmod +x gradlew
+
+    - name: Build APK
       run: |
-        find . -name "*.apk" 2>/dev/null
-        find . -name "*.aab" 2>/dev/null
- 
-    - name: Upload
+        cd twa
+        ./gradlew assembleRelease --no-daemon --stacktrace 2>&1 | tail -80
+
+    - name: Find and list APK
+      run: |
+        echo "=== All APK files ==="
+        find /home/runner/work -name "*.apk" 2>/dev/null
+        echo "=== Expected path ==="
+        ls -la twa/app/build/outputs/apk/release/ 2>/dev/null || echo "Path not found"
+
+    - name: Upload APK + keystore
       uses: actions/upload-artifact@v4
       with:
         name: SaLaTi-TWA
         path: |
-          twa/app/build/outputs/apk/release/*.apk
-          salati.keystore
+          twa/app/build/outputs/apk/release/app-release.apk
+          ${{ github.workspace }}/salati.keystore
         retention-days: 30
-      continue-on-error: true
