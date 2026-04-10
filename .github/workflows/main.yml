@@ -11,14 +11,18 @@ jobs:
         distribution: temurin
         java-version: '17'
     - uses: android-actions/setup-android@v3
-    - run: yes | sdkmanager "build-tools;34.0.0" "platforms;android-34" --sdk_root=$ANDROID_SDK_ROOT 2>/dev/null || true
-    - run: keytool -genkeypair -alias salati-key -keyalg RSA -keysize 2048 -validity 10000 -keystore $GITHUB_WORKSPACE/salati.keystore -storepass salati2026 -keypass salati2026 -dname "CN=SaLaTi,OU=Dev,O=SaLaTi,L=Casablanca,ST=MA,C=MA" -noprompt
-    - name: Create project
-      run: python3 /home/runner/work/SaLaTi/SaLaTi/build.py
-    - run: curl -sL "https://webnour2026.github.io/SaLaTi/icon-512.png" -o twa/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
-    - run: cd twa && gradle wrapper --gradle-version=8.2 && chmod +x gradlew
-    - run: cd twa && ./gradlew assembleRelease --no-daemon 2>&1 | tail -60
-    - run: find twa -name "*.apk" 2>/dev/null || echo "not found"
+    - name: SDK
+      run: yes | sdkmanager "build-tools;34.0.0" "platforms;android-34" --sdk_root=$ANDROID_SDK_ROOT 2>/dev/null || true
+    - name: Keystore
+      run: keytool -genkeypair -alias salati-key -keyalg RSA -keysize 2048 -validity 10000 -keystore $GITHUB_WORKSPACE/salati.keystore -storepass salati2026 -keypass salati2026 -dname "CN=SaLaTi,OU=Dev,O=SaLaTi,L=Casablanca,ST=MA,C=MA" -noprompt
+    - name: Icon
+      run: mkdir -p twa/app/src/main/res/mipmap-xxxhdpi && curl -sL "https://webnour2026.github.io/SaLaTi/icon-512.png" -o twa/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+    - name: Gradle wrapper
+      run: cd twa && gradle wrapper --gradle-version=8.2 --distribution-type=bin && chmod +x gradlew
+    - name: Build
+      run: cd twa && ./gradlew assembleRelease --no-daemon 2>&1 | tail -60
+    - name: Find APK
+      run: find twa -name "*.apk" 2>/dev/null || echo "not found"
     - uses: actions/upload-artifact@v4
       with:
         name: SaLaTi-TWA
