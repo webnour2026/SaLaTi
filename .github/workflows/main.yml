@@ -1,33 +1,33 @@
 name: Build TWA SaLaTi
-
+ 
 on:
   workflow_dispatch:
-
+ 
 jobs:
   build:
     runs-on: ubuntu-latest
+ 
     steps:
-
-    - name: Checkout repo
+    - name: Checkout
       uses: actions/checkout@v4
-
+ 
     - name: Setup Java 17
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '17'
-
+ 
     - name: Setup Node 18
       uses: actions/setup-node@v4
       with:
         node-version: '18'
-
+ 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
-
+ 
     - name: Install Bubblewrap
       run: npm install -g @bubblewrap/cli
-
+ 
     - name: Generate keystore
       run: |
         keytool -genkeypair \
@@ -35,24 +35,19 @@ jobs:
           -keyalg RSA \
           -keysize 2048 \
           -validity 10000 \
-          -keystore salati.keystore \
+          -keystore $GITHUB_WORKSPACE/salati.keystore \
           -storepass salati2026 \
           -keypass salati2026 \
-          -dname "CN=SaLaTi Admin, OU=Engineering, O=SaLaTi Prayer Times, L=Casablanca, ST=MA, C=MA" \
+          -dname "CN=SaLaTi,OU=Dev,O=SaLaTi,L=Casablanca,ST=MA,C=MA" \
           -noprompt
-
-    - name: Get fingerprint
-      run: |
-        echo "=== SHA256 FINGERPRINT ==="
         keytool -list -v \
-          -keystore salati.keystore \
-          -alias salati-key \
-          -storepass salati2026 \
-          -noprompt | grep SHA256
-
-    - name: Create Bubblewrap config
+          -keystore $GITHUB_WORKSPACE/salati.keystore \
+          -storepass salati2026 -noprompt | grep SHA256
+ 
+    - name: Create twa-manifest.json
       run: |
-        cat > twa-manifest.json << 'TWAEOF'
+        mkdir -p twa-project
+        cat > twa-project/twa-manifest.json << 'EOF'
         {
           "packageId": "io.github.webnour2026.twa",
           "host": "webnour2026.github.io",
@@ -73,7 +68,7 @@ jobs:
           "monochromeIconUrl": "https://webnour2026.github.io/SaLaTi/icon-512.png",
           "splashScreenFadeOutDuration": 300,
           "signingKey": {
-            "path": "../salati.keystore",
+            "path": "/home/runner/work/SaLaTi/SaLaTi/salati.keystore",
             "alias": "salati-key"
           },
           "appVersionCode": 1,
@@ -95,27 +90,26 @@ jobs:
           "additionalTrustedOrigins": [],
           "retainedBundles": []
         }
-        TWAEOF
-
-    - name: Init Bubblewrap project
-      run: |
-        mkdir twa-project && cd twa-project
-        bubblewrap init \
-          --manifest https://webnour2026.github.io/SaLaTi/manifest.json \
-          --directory .
-      env:
-        BUBBLEWRAP_DISABLE_TELEMETRY: true
-
-    - name: Build APK and AAB
+        EOF
+ 
+    - name: Build TWA
       run: |
         cd twa-project
-        echo "salati2026" | bubblewrap build \
-          --skipPwaValidation
-
+        bubblewrap build \
+          --skipPwaValidation \
+          --manifest ./twa-manifest.json
+      env:
+        BUBBLEWRAP_DISABLE_TELEMETRY: "true"
+        STORE_PASSWORD: salati2026
+        KEY_PASSWORD: salati2026
+ 
+    - name: Find build output
+      run: find . -name "*.apk" -o -name "*.aab" 2>/dev/null || echo "No APK/AAB found"
+ 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: SaLaTi-TWA-Release
+        name: SaLaTi-TWA
         path: |
           twa-project/app-release-signed.apk
           twa-project/app-release.aab
